@@ -1,8 +1,33 @@
 """
-This module implements various Ridge regression predictors and related utilities.
-It includes abstract base classes, concrete implementations for Cholesky, Woodbury,
-and Sherman-Morrison Ridge predictors, and helper functions for tuning regularization
-parameters.
+This module implements a comprehensive suite of Ridge regression predictors and related utilities,
+designed for efficient and flexible regularized linear regression, particularly for high-dimensional data.
+
+It is designed to handle group-wise regularization, allowing for different penalty terms
+for different feature groups. It provides tools for efficient computation of Ridge regression
+solutions, even in high-dimensional settings, by leveraging matrix identities and decompositions.
+
+Additionally, it includes advanced methods for tuning regularization parameters, including
+moment-based approaches and regularization path analysis. These tools enable users to select
+optimal regularization strengths, balancing model complexity and fit to the data.
+
+Key components:
+
+1. Abstract and Concrete Ridge Predictors:
+   - AbstractRidgePredictor: Defines the interface for all Ridge predictors.
+   - CholeskyRidgePredictor: Efficient for scenarios where p < n.
+   - WoodburyRidgePredictor: Optimized for cases where p > n.
+   - ShermanMorrisonRidgePredictor: Ideal for very high-dimensional data.
+
+2. BasicGroupRidgeWorkspace: Manages the entire Ridge regression workflow, including:
+   - Model fitting and prediction
+   - Regularization parameter updates
+   - Computation of leverage scores and error metrics
+
+3. Regularization Parameter Tuning:
+   - lambda_lolas_rule: Implements the LOLAS rule for λ selection.
+   - MomentTunerSetup: Prepares moment-based statistics for tuning.
+   - sigma_squared_path: Computes the regularization path for varying σ².
+   - get_lambdas and get_alpha_s_squared: Helper functions for λ computation.
 """
 
 from abc import ABC, abstractmethod

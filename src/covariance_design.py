@@ -1,3 +1,33 @@
+"""
+This module implements various covariance matrix designs for use in statistical modeling and machine learning applications. 
+It provides a flexible framework for creating and manipulating various covariance structures, which is essential for many
+statistical and machine learning tasks.
+
+Key components:
+
+1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues and associated probabilities.
+
+2. CovarianceDesign: An abstract base class defining the interface for all covariance matrix designs.
+
+3. Specific covariance designs:
+   - AR1Design: Implements an AutoRegressive model of order 1.
+   - DiagonalCovarianceDesign: An abstract base class for diagonal covariance matrices.
+   - IdentityCovarianceDesign: Constructs an identity covariance matrix.
+   - UniformScalingCovarianceDesign: Creates a diagonal matrix with uniform scaling.
+   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics.
+
+4. BlockDiagonal: A class for representing block diagonal matrices.
+
+5. MixtureModel: Represents a mixture of multiple spectra with associated mixing proportions.
+
+6. BlockCovarianceDesign: Constructs complex covariance structures by composing multiple covariance designs.
+
+7. Utility functions:
+   - block_diag: Constructs a block diagonal matrix from input arrays.
+   - simulate_rotated_design: Simulates a rotated design matrix based on a given covariance design.
+   - set_groups: Configures feature groups for covariance designs.
+"""
+
 from abc import ABC, abstractmethod
 from typing import List, Callable, Union
 import numpy as np
