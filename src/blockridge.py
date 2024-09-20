@@ -797,7 +797,6 @@ def sigma_squared_path(rdg: BasicGroupRidgeWorkspace, mom: MomentTunerSetup, sig
             betas[i, :] = rdg.beta_current
         except RidgeRegressionError as e:
             print(f"Error at σ² = {sigma_sq}: {str(e)}")
-            # You might want to handle this error more gracefully depending on your use case
     
     return {'lambdas': lambdas, 'loos': loos_hat, 'betas': betas}
 
