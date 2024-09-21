@@ -578,15 +578,11 @@ def test_set_groups_with_invalid_groups_or_p_type():
     ar1 = AR1Design(p=None, rho=0.5)
     with pytest.raises(TypeError):
         set_groups(ar1, "invalid_type")
-
+        
 
 def test_set_groups_with_GroupedFeatures_invalid_group_sizes():
-    groups = GroupedFeatures(ps=[2, -3])  # Negative group size
-    block1 = IdentityCovarianceDesign(p=None)
-    block2 = UniformScalingCovarianceDesign(scaling=3.0, p=None)
-    block_design = BlockCovarianceDesign(blocks=[block1, block2])
-    with pytest.raises(ValueError):
-        set_groups(block_design, groups)
+    with pytest.raises(ValueError, match="All group sizes in ps must be positive integers"):
+        GroupedFeatures(ps=[2, -3])  # Negative group size
 
 
 def test_set_groups_with_int_invalid_value():

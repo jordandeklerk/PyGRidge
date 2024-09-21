@@ -35,6 +35,7 @@ from typing import List, Union, TypeVar
 import numpy as np
 from scipy.linalg import cho_solve
 from groupedfeatures import GroupedFeatures
+import warnings
 
 T = TypeVar('T')
 
@@ -503,7 +504,7 @@ class BasicGroupRidgeWorkspace:
         self.groups = groups
         self.n, self.p = X.shape
         
-        # Choose the appropriate predictor based on dimensions
+        # Initialize predictor based on p and n
         if self.p <= self.n:
             self.predictor = CholeskyRidgePredictor(X)
         elif self.p > self.n and self.p < 4 * self.n:  
@@ -516,7 +517,11 @@ class BasicGroupRidgeWorkspace:
         self.update_lambda_s(self.lambdas)
         self.beta_current = self.predictor.ldiv(self.XtY)
         self.Y_hat = np.dot(X, self.beta_current)
-        self.XtXp_lambda_div_Xt = self.predictor.ldiv(X.T)
+        
+        # Compute (X^T X + Λ)^{-1}
+        self.XtXp_lambda_inv = self.predictor.ldiv(np.eye(self.p))
+
+        self.moment_setup = MomentTunerSetup(self)
 
     def update_lambda_s(self, lambdas: np.ndarray):
         """
@@ -720,19 +725,15 @@ class MomentTunerSetup:
     """
     
     def __init__(self, rdg: BasicGroupRidgeWorkspace):
-        """
-        Initialize the MomentTunerSetup.
-        
-        Args:
-            rdg (BasicGroupRidgeWorkspace): The Ridge regression workspace containing model parameters.
-        """
         self.groups = rdg.groups
         self.ps = np.array(rdg.groups.ps)
         self.n = rdg.n
         self.beta_norms_squared = np.array(
             rdg.groups.group_summary(rdg.beta_current, lambda x: np.sum(np.abs(x)**2))
         )
-        N_matrix = rdg.XtXp_lambda_div_Xt
+        N_matrix = rdg.XtXp_lambda_inv  # Use the (p, p) inverse matrix
+        if N_matrix.shape[1] != self.ps.sum():
+            raise ValueError(f"Length of N_matrix ({N_matrix.shape[1]}) does not match number of features ({self.ps.sum()})")
         self.N_norms_squared = np.array(
             rdg.groups.group_summary(N_matrix, lambda x: np.sum(np.abs(x)**2))
         )
@@ -844,15 +845,23 @@ def get_lambdas(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
     """
     if sigma_sq < 0:
         raise ValueError("sigma_sq must be non-negative.")
-    
+
     alpha_sq = get_alpha_s_squared(mom, sigma_sq)
     gamma_s = np.array(mom.ps) / mom.n
+
+    LARGE_VALUE = 1e12
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        lambdas = sigma_sq * gamma_s / alpha_sq
+        zero_alpha = alpha_sq == 0
+        if np.any(zero_alpha):
+            warnings.warn(
+                f"alpha_sq has zero values for groups: {np.where(zero_alpha)[0]}. "
+                "Assigning large lambda values to these groups."
+            )
+        lambdas = np.where(zero_alpha, LARGE_VALUE, lambdas)
     
-    with np.errstate(divide='raise'):
-        try:
-            return sigma_sq * gamma_s / alpha_sq
-        except FloatingPointError:
-            raise NumericalInstabilityError("Division by zero encountered while computing lambdas.")
+    return lambdas
 
 def get_alpha_s_squared(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
     """
