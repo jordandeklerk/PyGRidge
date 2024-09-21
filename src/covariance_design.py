@@ -1,8 +1,7 @@
 """
-This module implements various covariance matrix designs for use in statistical modeling and machine learning applications. 
-It provides a flexible framework for creating and manipulating various covariance structures, which is essential for many
-statistical and machine learning tasks.
-
+This module implements various covariance matrix designs. It provides a flexible framework for creating
+and manipulating various covariance structures. The module defines abstract classes for covariance designs
+and specific implementations for different types of covariance matrices.
 Key components:
 
 1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues and associated probabilities.
