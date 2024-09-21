@@ -101,6 +101,17 @@ def test_woodbury_ridge_predictor_update_lambda_s(X, groups):
 # ------------------------------
 # Tests for BasicGroupRidgeWorkspace
 # ------------------------------
+def test_basic_group_ridge_workspace_initialization(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    assert workspace.n == X.shape[0]
+    assert workspace.p == X.shape[1]
+    assert workspace.groups == groups
+    assert workspace.XtY.shape == (X.shape[1],)
+    assert workspace.lambdas.shape == (groups.num_groups,)
+    assert workspace.beta_current.shape == (X.shape[1],)
+    assert workspace.Y_hat.shape == (X.shape[0],)
+    assert workspace.XtXp_lambda_div_Xt.shape == (X.shape[1], X.shape[0])
+    
 def test_basic_group_ridge_workspace_fit(X, Y, groups):
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     # Generate lambdas based on the number of groups
@@ -111,6 +122,53 @@ def test_basic_group_ridge_workspace_fit(X, Y, groups):
     # For example, check if Y_hat is correctly updated
     expected_Y_hat = X @ workspace.beta_current
     np.testing.assert_allclose(workspace.Y_hat, expected_Y_hat, atol=1e-6)
+
+def test_basic_group_ridge_workspace_update_lambda_s(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    new_lambdas = np.random.rand(groups.num_groups)
+    workspace.update_lambda_s(new_lambdas)
+    np.testing.assert_allclose(workspace.lambdas, new_lambdas)
+
+def test_basic_group_ridge_workspace_ngroups(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    assert workspace.ngroups() == groups.num_groups
+
+def test_basic_group_ridge_workspace_coef(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    assert np.allclose(workspace.coef(), workspace.beta_current)
+
+def test_basic_group_ridge_workspace_islinear(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    assert workspace.islinear() == True
+
+def test_basic_group_ridge_workspace_leverage(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    workspace.fit(np.ones(groups.num_groups))
+    leverage = workspace.leverage()
+    assert leverage.shape == (X.shape[0],)
+    assert np.all(leverage >= 0) and np.all(leverage <= 1)
+
+def test_basic_group_ridge_workspace_modelmatrix(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    np.testing.assert_allclose(workspace.modelmatrix(), X)
+
+def test_basic_group_ridge_workspace_response(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    np.testing.assert_allclose(workspace.response(), Y)
+
+def test_basic_group_ridge_workspace_fit_with_dict(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    lambda_dict = {f"group_{i}": val for i, val in enumerate(np.random.rand(groups.num_groups))}
+    loo_error = workspace.fit(lambda_dict)
+    assert isinstance(loo_error, float)
+    assert loo_error >= 0
+
+def test_basic_group_ridge_workspace_predict_new_data(X, Y, groups):
+    workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
+    workspace.fit(np.ones(groups.num_groups))
+    X_new = np.random.randn(10, X.shape[1])
+    predictions = workspace.predict(X_new)
+    assert predictions.shape == (10,)
 
 # ------------------------------
 # Tests for Lambda LOLAS Rule
