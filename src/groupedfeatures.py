@@ -1,4 +1,7 @@
 """
+GroupedFeatures Module
+======================
+
 This module provides a flexible and efficient way to handle grouped features. It introduces
 the GroupedFeatures class, which represents a collection of features organized into groups
 of varying sizes. This module is particularly useful in scenarios where features naturally

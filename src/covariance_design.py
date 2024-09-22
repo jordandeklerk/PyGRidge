@@ -1,4 +1,7 @@
 """
+Covariance Design Module
+========================
+
 This module implements various covariance matrix designs. It provides a flexible framework for creating
 and manipulating various covariance structures. The module defines abstract classes for covariance designs
 and specific implementations for different types of covariance matrices.

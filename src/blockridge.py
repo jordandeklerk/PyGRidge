@@ -1,4 +1,7 @@
 """
+Blockridge Module
+====================
+
 This module implements a comprehensive suite of Ridge regression predictors and related utilities,
 designed for efficient and flexible regularized linear regression, particularly for high-dimensional data.
 
