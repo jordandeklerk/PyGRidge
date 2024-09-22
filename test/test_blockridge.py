@@ -2,7 +2,8 @@ import pytest
 import numpy as np
 import time
 from scipy.linalg import cho_solve
-from blockridge import (
+
+from PyGRidge.src.blockridge import (
     CholeskyRidgePredictor,
     WoodburyRidgePredictor,
     ShermanMorrisonRidgePredictor,
@@ -13,7 +14,8 @@ from blockridge import (
     get_lambdas,
     get_alpha_s_squared,
 )
-from groupedfeatures import GroupedFeatures
+
+from PyGRidge.src import GroupedFeatures
 
 @pytest.fixture
 def X():

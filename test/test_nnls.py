@@ -1,9 +1,12 @@
 import numpy as np
 import pytest
-from nnls import nonneg_lsq, fnnls, fnnls_core, NNLSError, InvalidInputError, ConvergenceError
 from scipy.optimize import nnls as scipy_nnls
 import time
 from scipy.sparse import csr_matrix
+
+from PyGRidge.src.nnls import (
+    nonneg_lsq, fnnls, fnnls_core, NNLSError, InvalidInputError, ConvergenceError
+)
 
 @pytest.fixture
 def simple_A_B():

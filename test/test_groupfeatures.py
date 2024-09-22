@@ -1,6 +1,7 @@
 import pytest
 from typing import List, Callable
-from groupedfeatures import GroupedFeatures, fill
+
+from PyGRidge.src.groupedfeatures import GroupedFeatures, fill
 
 # Define a simple summary function for testing
 def sum_func(group: List[int]) -> int:
