@@ -15,7 +15,7 @@ from PyGRidge.src.blockridge import (
     get_alpha_s_squared,
 )
 
-from PyGRidge.src import GroupedFeatures
+from PyGRidge.src.groupedfeatures import GroupedFeatures
 
 @pytest.fixture
 def X():
