@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch 
 
-from PyGRidge.src.covariance_design import (
+from ..src.covariance_design import (
     DiscreteNonParametric,
     CovarianceDesign,
     AR1Design,
@@ -18,7 +18,7 @@ from PyGRidge.src.covariance_design import (
     set_groups
 )
 
-from PyGRidge.src.groupedfeatures import GroupedFeatures  
+from ..src.groupedfeatures import GroupedFeatures  
 
 # ------------------------------
 # Tests for DiscreteNonParametric
@@ -447,7 +447,7 @@ def test_block_diag_exception_handling():
     B = np.array([[2, 0], [0, 2]])
     block_diag_obj = BlockDiagonal(blocks=[A, B])
 
-    with patch('PyGRidge.src.covariance_design.block_diag', side_effect=Exception("Mocked exception")):
+    with patch('..src.covariance_design.block_diag', side_effect=Exception("Mocked exception")):
         with pytest.raises(RuntimeError, match="Failed to construct block diagonal matrix: Mocked exception"):
             Sigma = block_diag_obj.get_Sigma()
 

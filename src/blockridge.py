@@ -165,7 +165,7 @@ from abc import ABC, abstractmethod
 from typing import List, Union, TypeVar
 import numpy as np
 from scipy.linalg import cho_solve
-from PyGRidge.src.groupedfeatures import GroupedFeatures
+from ..src.groupedfeatures import GroupedFeatures
 import warnings
 
 T = TypeVar('T')

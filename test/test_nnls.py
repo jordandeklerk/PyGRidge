@@ -4,7 +4,7 @@ from scipy.optimize import nnls as scipy_nnls
 import time
 from scipy.sparse import csr_matrix
 
-from PyGRidge.src.nnls import (
+from ..src.nnls import (
     nonneg_lsq, fnnls, fnnls_core, NNLSError, InvalidInputError, ConvergenceError
 )
 

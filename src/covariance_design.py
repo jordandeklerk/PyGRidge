@@ -34,7 +34,7 @@ from abc import ABC, abstractmethod
 from typing import List, Callable, Union
 import numpy as np
 
-from PyGRidge.src.groupedfeatures import GroupedFeatures, fill
+from ..src.groupedfeatures import GroupedFeatures, fill
 
 
 class DiscreteNonParametric:
