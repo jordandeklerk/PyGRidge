@@ -5,9 +5,11 @@ Covariance Design Module
 This module implements various covariance matrix designs. It provides a flexible framework for creating
 and manipulating various covariance structures. The module defines abstract classes for covariance designs
 and specific implementations for different types of covariance matrices.
+
 Key components:
 
-1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues and associated probabilities.
+1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues and 
+   associated probabilities.
 
 2. CovarianceDesign: An abstract base class defining the interface for all covariance matrix designs.
 
