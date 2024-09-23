@@ -16,6 +16,7 @@ from ..src.blockridge import (
 )
 
 from ..src.groupedfeatures import GroupedFeatures
+from ..src.nnls import NNLSError  
 
 @pytest.fixture
 def X():
@@ -236,10 +237,14 @@ def test_get_alpha_s_squared(X, Y, groups):
     workspace.fit(lambdas)
     mom = MomentTunerSetup(workspace)
     sigma_sq = 1.0
-    alpha_sq = get_alpha_s_squared(mom, sigma_sq)
+    try:
+        alpha_sq = get_alpha_s_squared(mom, sigma_sq)
+    except NNLSError as e:
+        pytest.fail(f"NNLS failed with error: {e}")
+
     assert alpha_sq.shape == (groups.num_groups,)
     # Check that alpha_sq are non-negative
-    assert np.all(alpha_sq >= 0)
+    assert np.all(alpha_sq >= 0), "alpha_sq contains negative values."
 
 # ------------------------------
 # Tests for Prediction

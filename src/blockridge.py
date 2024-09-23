@@ -166,6 +166,7 @@ from typing import List, Union, TypeVar
 import numpy as np
 from scipy.linalg import cho_solve
 from ..src.groupedfeatures import GroupedFeatures
+from ..src.nnls import nonneg_lsq, NNLSError
 import warnings
 
 T = TypeVar('T')
@@ -994,41 +995,52 @@ def get_lambdas(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
     
     return lambdas
 
-def get_alpha_s_squared(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
+def get_alpha_s_squared(self, sigma_sq: float) -> np.ndarray:
     """
-    Compute α_s² values for a given σ².
-    
+    Compute α_s² values for a given σ² using Non-Negative Least Squares (NNLS).
+
     This function calculates the α_s² values required for determining the
     regularization parameters (λ) in Ridge regression. The α_s² values
     encapsulate the balance between the coefficient norms and the influence of
     the design matrix, adjusted by σ².
-    
+
+    Steps:
     1. Compute Right-Hand Side (RHS):
-    
-       RHS_g = ‖β_g‖^2 - σ^2 * ‖N_g‖^2
-    
+       RHS_g = ‖β_g‖² - σ² * ‖N_g‖²
        for each group g.
-    
-    2. Compute α_g^2:
-    
-       α_g^2 = max(RHS_g, 0) / p_g
-    
-       This ensures that α_g^2 remains non-negative.
-    
+
+    2. Solve the NNLS problem:
+       min || M_squared * alpha_sq_by_p - RHS ||₂²
+       subject to alpha_sq_by_p ≥ 0
+
+    3. Compute α_g²:
+       α_g² = alpha_sq_by_p * p_g
+
     Args:
-        mom (MomentTunerSetup): The moment tuner setup containing necessary statistics.
-        sigma_sq (float): The σ^2 value for which to compute α_s^2.
-    
+        sigma_sq (float): The σ² value for which to compute α_s².
+
     Returns:
-        np.ndarray: The computed α_s^2 values for each feature group.
+        np.ndarray: The computed α_s² values for each feature group.
 
     Raises:
         ValueError: If sigma_sq is negative or if any p_s is zero.
+        NNLSError: If the NNLS algorithm fails to converge.
     """
     if sigma_sq < 0:
         raise ValueError("sigma_sq must be non-negative.")
-    if np.any(mom.ps == 0):
+    if np.any(self.groups.ps == 0):
         raise ValueError("All p_s values must be non-zero.")
-    
-    rhs = mom.beta_norms_squared - sigma_sq * mom.N_norms_squared
-    return np.maximum(rhs, 0) / mom.ps
+
+    # Compute the right-hand side
+    rhs = self.beta_norms_squared - sigma_sq * self.N_norms_squared
+    rhs = np.maximum(rhs, 0)
+
+    # Solve the NNLS problem: M_squared * alpha_sq_by_p ≈ rhs
+    try:
+        alpha_sq_by_p = nonneg_lsq(self.M_squared, rhs, alg='fnnls')
+    except NNLSError as e:
+        raise NNLSError(f"Failed to compute alpha_s_squared: {str(e)}")
+
+    alpha_s_squared = alpha_sq_by_p * self.groups.ps
+
+    return alpha_s_squared
