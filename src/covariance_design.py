@@ -3,26 +3,26 @@ Covariance Design Module
 ========================
 
 This module implements various covariance matrix designs. It provides a flexible framework for creating
-and manipulating various covariance structures. The module defines abstract classes for covariance designs
-and specific implementations for different types of covariance matrices.
+and manipulating different covariance structures. The module defines abstract classes for covariance designs
+and specific implementations for various types of covariance matrices.
 
 Key components:
 
-1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues λ_i and 
+1. DiscreteNonParametric: Represents discrete non-parametric spectra with eigenvalues λ_i and 
    associated probabilities p_i, where Σ_i p_i = 1.
 
-2. CovarianceDesign: An abstract base class defining the interface for all covariance matrix designs.
+2. CovarianceDesign: Abstract base class defining the interface for all covariance matrix designs.
    It specifies methods for obtaining the covariance matrix Σ, its number of features p, and its spectrum.
 
 3. Specific covariance designs:
    - AR1Design: Implements an AutoRegressive model of order 1, where Σ_{ij} = ρ^{|i-j|}, ρ ∈ [0, 1).
-   - DiagonalCovarianceDesign: An abstract base class for diagonal covariance matrices, where Σ_{ij} = 0 for i ≠ j.
+   - DiagonalCovarianceDesign: Abstract base class for diagonal covariance matrices, where Σ_{ij} = 0 for i ≠ j.
    - IdentityCovarianceDesign: Constructs an identity covariance matrix, where Σ_{ij} = δ_{ij}.
    - UniformScalingCovarianceDesign: Creates a diagonal matrix with uniform scaling, where Σ_{ii} = c for all i.
    - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics,
      where λ_i = (1/rate) * log(1/t_i), and t_i are uniformly spaced in (1/(2p), 1 - 1/(2p)).
 
-4. BlockDiagonal: A class for representing block diagonal matrices of the form:
+4. BlockDiagonal: Represents block diagonal matrices of the form:
    Σ = diag(Σ_1, Σ_2, ..., Σ_k), where each Σ_i is a square matrix.
 
 5. MixtureModel: Represents a mixture of multiple spectra with associated mixing proportions,
@@ -39,6 +39,7 @@ Key components:
 
 from abc import ABC, abstractmethod
 from typing import List, Callable, Union
+
 import numpy as np
 
 from ..src.groupedfeatures import GroupedFeatures, fill
@@ -179,16 +180,18 @@ class AR1Design(CovarianceDesign):
             raise ValueError("Number of features 'p' is not set.")
         if self.p <= 0:
             raise ValueError("'p' must be a positive integer.")
+        
         rho = self.rho
         indices = np.arange(self.p)
 
-        # Compute |i - j| for all i,j
         try:
             Sigma = rho ** np.abs(np.subtract.outer(indices, indices))
         except Exception as e:
             raise RuntimeError(f"Failed to compute covariance matrix: {e}")
+
         if not np.allclose(Sigma, Sigma.T):
             raise ValueError("Covariance matrix Σ must be symmetric.")
+        
         return Sigma
 
     def nfeatures(self) -> int:
@@ -204,11 +207,14 @@ class AR1Design(CovarianceDesign):
             eigs = np.linalg.eigvals(Sigma)
         except np.linalg.LinAlgError as e:
             raise RuntimeError(f"Eigenvalue computation failed: {e}")
+
         if eigs.size == 0:
             raise ValueError("Covariance matrix Σ has no eigenvalues.")
+
         probs = fill(1.0 / len(eigs), len(eigs))
         if not np.isclose(np.sum(probs), 1.0):
             raise ValueError("Probabilities must sum to 1.")
+
         return DiscreteNonParametric(eigs.tolist(), probs)
 
 
@@ -273,19 +279,24 @@ class IdentityCovarianceDesign(DiagonalCovarianceDesign):
             raise ValueError("Number of features 'p' is not set.")
         if self.p <= 0:
             raise ValueError("'p' must be a positive integer.")
+        
         try:
             Sigma = np.identity(self.p)
         except Exception as e:
             raise RuntimeError(f"Failed to create identity matrix: {e}")
+        
         return Sigma
 
     def spectrum(self) -> DiscreteNonParametric:
         if self.p is None:
             raise ValueError("Number of features 'p' is not set.")
+        
         eigs = [1.0] * self.p
         probs = [1.0 / self.p] * self.p
+
         if not np.isclose(sum(probs), 1.0):
             raise ValueError("Probabilities must sum to 1.")
+
         return DiscreteNonParametric(eigs, probs)
 
 
@@ -323,19 +334,24 @@ class UniformScalingCovarianceDesign(DiagonalCovarianceDesign):
             raise ValueError("Number of features 'p' is not set.")
         if self.p <= 0:
             raise ValueError("'p' must be a positive integer.")
+        
         try:
             Sigma = self.scaling * np.identity(self.p)
         except Exception as e:
             raise RuntimeError(f"Failed to create scaled identity matrix: {e}")
+        
         return Sigma
 
     def spectrum(self) -> DiscreteNonParametric:
         if self.p is None:
             raise ValueError("Number of features 'p' is not set.")
+        
         eigs = [self.scaling] * self.p
         probs = [1.0 / self.p] * self.p
+
         if not np.isclose(sum(probs), 1.0):
             raise ValueError("Probabilities must sum to 1.")
+
         return DiscreteNonParametric(eigs, probs)
 
 
@@ -383,30 +399,38 @@ class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
             raise ValueError("Number of features 'p' is not set.")
         if self.p <= 0:
             raise ValueError("'p' must be a positive integer.")
+
         p = self.p
         rate = self.rate
+
         try:
             tmp = np.linspace(1 / (2 * p), 1 - 1 / (2 * p), p)
             eigs = (1 / rate) * np.log(1 / tmp)
         except Exception as e:
             raise RuntimeError(f"Failed to compute eigenvalues: {e}")
+
         probs = fill(1.0 / p, p)
+
         if not np.isclose(np.sum(probs), 1.0):
             raise ValueError("Probabilities must sum to 1.")
         if len(eigs) != p:
             raise ValueError("Number of eigenvalues must match the number of features.")
+
         return DiscreteNonParametric(eigs.tolist(), probs)
 
     def get_Sigma(self) -> np.ndarray:
         spectrum = self.spectrum()
+
         try:
             Sigma = np.diag(spectrum.eigs)
         except Exception as e:
             raise RuntimeError(f"Failed to create diagonal matrix from eigenvalues: {e}")
+
         if Sigma.shape[0] != Sigma.shape[1]:
             raise ValueError("Covariance matrix Σ must be square.")
         if not np.allclose(Sigma, Sigma.T):
             raise ValueError("Covariance matrix Σ must be symmetric.")
+
         return Sigma
 
 
@@ -445,6 +469,7 @@ class BlockDiagonal:
             raise ValueError("All blocks must be 2-dimensional numpy arrays.")
         if not all(block.shape[0] == block.shape[1] for block in blocks):
             raise ValueError("All blocks must be square matrices.")
+        
         self.blocks = blocks
 
     def get_Sigma(self) -> np.ndarray:
@@ -452,10 +477,12 @@ class BlockDiagonal:
             Sigma = block_diag(*self.blocks)
         except Exception as e:
             raise RuntimeError(f"Failed to construct block diagonal matrix: {e}")
+
         if Sigma.size == 0:
             raise ValueError("Resulting covariance matrix Σ is empty.")
         if not np.allclose(Sigma, Sigma.T):
             raise ValueError("Covariance matrix Σ must be symmetric.")
+        
         return Sigma
 
 
@@ -486,19 +513,22 @@ def block_diag(*arrs):
         raise ValueError("All input arrays must be 2-dimensional.")
     if not all(a.shape[0] == a.shape[1] for a in arrs):
         raise ValueError("All input arrays must be square matrices.")
+
     if len(arrs) == 0:
         return np.array([[]])
+
     try:
         shapes = np.array([a.shape for a in arrs])
         out_shape = np.sum(shapes, axis=0)
         out = np.zeros(out_shape, dtype=arrs[0].dtype)
         r, c = 0, 0
         for a in arrs:
-            out[r:r+a.shape[0], c:c+a.shape[1]] = a
+            out[r:r + a.shape[0], c:c + a.shape[1]] = a
             r += a.shape[0]
             c += a.shape[1]
     except Exception as e:
         raise RuntimeError(f"Failed to construct block diagonal matrix: {e}")
+
     return out
 
 
@@ -527,7 +557,9 @@ class MixtureModel:
     """
     def __init__(self, spectra: List[DiscreteNonParametric], mixing_prop: List[float]):
         if not isinstance(spectra, list):
-            raise TypeError(f"'spectra' must be a list of DiscreteNonParametric instances, got {type(spectra).__name__}")
+            raise TypeError(
+                f"'spectra' must be a list of DiscreteNonParametric instances, got {type(spectra).__name__}"
+            )
         if not all(isinstance(s, DiscreteNonParametric) for s in spectra):
             raise TypeError("All elements in 'spectra' must be instances of DiscreteNonParametric.")
         if not isinstance(mixing_prop, list):
@@ -575,30 +607,41 @@ class BlockCovarianceDesign(CovarianceDesign):
     def __init__(self, blocks: List[CovarianceDesign], groups: GroupedFeatures = None):
         super().__init__()
         if not isinstance(blocks, list):
-            raise TypeError(f"'blocks' must be a list of CovarianceDesign instances, got {type(blocks).__name__}")
+            raise TypeError(
+                f"'blocks' must be a list of CovarianceDesign instances, got {type(blocks).__name__}"
+            )
         if not all(isinstance(block, CovarianceDesign) for block in blocks):
             raise TypeError("All elements in 'blocks' must be instances of CovarianceDesign.")
         if groups is not None and not isinstance(groups, GroupedFeatures):
-            raise TypeError(f"'groups' must be an instance of GroupedFeatures or None, got {type(groups).__name__}")
+            raise TypeError(
+                f"'groups' must be an instance of GroupedFeatures or None, got {type(groups).__name__}"
+            )
+        
         self.blocks = blocks
         self.groups = groups
+
         if self.groups is not None:
             if len(self.groups.ps) != len(self.blocks):
-                raise ValueError("Number of groups must match number of blocks in BlockCovarianceDesign.")
+                raise ValueError(
+                    "Number of groups must match number of blocks in BlockCovarianceDesign."
+                )
 
     def get_Sigma(self) -> np.ndarray:
         try:
             block_matrices = [block.get_Sigma() for block in self.blocks]
         except Exception as e:
             raise RuntimeError(f"Failed to retrieve covariance matrices from blocks: {e}")
+
         try:
             Sigma = block_diag(*block_matrices)
         except Exception as e:
             raise RuntimeError(f"Failed to construct block diagonal covariance matrix: {e}")
+
         if Sigma.size == 0:
             raise ValueError("Resulting covariance matrix Σ is empty.")
         if not np.allclose(Sigma, Sigma.T):
             raise ValueError("Covariance matrix Σ must be symmetric.")
+
         return Sigma
 
     def nfeatures(self) -> int:
@@ -606,8 +649,10 @@ class BlockCovarianceDesign(CovarianceDesign):
             total_features = sum(block.nfeatures() for block in self.blocks)
         except Exception as e:
             raise RuntimeError(f"Failed to compute total number of features: {e}")
+
         if total_features <= 0:
             raise ValueError("Total number of features must be positive.")
+        
         return total_features
 
     def spectrum(self) -> MixtureModel:
@@ -615,13 +660,17 @@ class BlockCovarianceDesign(CovarianceDesign):
             spectra = [block.spectrum() for block in self.blocks]
         except Exception as e:
             raise RuntimeError(f"Failed to retrieve spectra from blocks: {e}")
+
         if self.groups is not None:
             if len(self.groups.ps) != len(spectra):
                 raise ValueError("Number of groups must match number of blocks.")
+            
             mixing_prop = []
             total_p = self.groups.p
+
             if total_p == 0:
                 raise ValueError("Total number of features across all groups must be positive.")
+
             for ps in self.groups.ps:
                 if not isinstance(ps, int):
                     raise TypeError("Group sizes in 'groups.ps' must be integers.")
@@ -633,12 +682,18 @@ class BlockCovarianceDesign(CovarianceDesign):
             if num_spectra == 0:
                 raise ValueError("There must be at least one spectrum to form a mixture model.")
             mixing_prop = [1.0 / num_spectra] * num_spectra
+
         if not np.isclose(sum(mixing_prop), 1.0):
             raise ValueError("Mixing proportions must sum to 1.")
+
         return MixtureModel(spectra, mixing_prop)
 
 
-def simulate_rotated_design(cov: CovarianceDesign, n: int, rotated_measure: Callable = None) -> np.ndarray:
+def simulate_rotated_design(
+    cov: CovarianceDesign,
+    n: int,
+    rotated_measure: Callable = None
+) -> np.ndarray:
     """
     Simulates a rotated design matrix based on the provided covariance design.
 
@@ -663,12 +718,15 @@ def simulate_rotated_design(cov: CovarianceDesign, n: int, rotated_measure: Call
     Raises:
         ValueError: If Σ is not positive definite, making the Cholesky decomposition impossible.
         TypeError: If input types are incorrect.
+
     Example:
         >>> ar1 = AR1Design(p=5, rho=0.7)
         >>> X = simulate_rotated_design(ar1, n=100)
     """
     if not isinstance(cov, CovarianceDesign):
-        raise TypeError(f"'cov' must be an instance of CovarianceDesign, got {type(cov).__name__}")
+        raise TypeError(
+            f"'cov' must be an instance of CovarianceDesign, got {type(cov).__name__}"
+        )
     if not isinstance(n, int):
         raise TypeError(f"'n' must be an integer, got {type(n).__name__}")
     if n <= 0:
@@ -703,7 +761,9 @@ def simulate_rotated_design(cov: CovarianceDesign, n: int, rotated_measure: Call
     try:
         Z = rotated_measure(size=(n, p))
     except Exception as e:
-        raise RuntimeError(f"Failed to generate random samples using 'rotated_measure': {e}")
+        raise RuntimeError(
+            f"Failed to generate random samples using 'rotated_measure': {e}"
+        )
 
     if not isinstance(Z, np.ndarray):
         raise TypeError("Output from 'rotated_measure' must be a numpy.ndarray.")
@@ -723,7 +783,10 @@ def simulate_rotated_design(cov: CovarianceDesign, n: int, rotated_measure: Call
     return X
 
 
-def set_groups(design: CovarianceDesign, groups_or_p: Union[GroupedFeatures, int]):
+def set_groups(
+    design: CovarianceDesign,
+    groups_or_p: Union[GroupedFeatures, int]
+):
     """
     Configures the number of features or feature groups for a given `CovarianceDesign` instance.
 
@@ -739,31 +802,40 @@ def set_groups(design: CovarianceDesign, groups_or_p: Union[GroupedFeatures, int
     Raises:
         TypeError: If `groups_or_p` is neither an instance of `GroupedFeatures` nor an integer.
         ValueError: If group sizes are inconsistent with the number of blocks in `BlockCovarianceDesign`.
+
     Example:
         >>> groups = GroupedFeatures(ps=[2, 3])
         >>> set_groups(design, groups)
     """
     if not isinstance(design, CovarianceDesign):
-        raise TypeError(f"'design' must be an instance of CovarianceDesign, got {type(design).__name__}")
+        raise TypeError(
+            f"'design' must be an instance of CovarianceDesign, got {type(design).__name__}"
+        )
 
     if isinstance(groups_or_p, GroupedFeatures):
         groups = groups_or_p
         p = groups.nfeatures()
+
         if isinstance(design, BlockCovarianceDesign):
             if len(groups.ps) != len(design.blocks):
-                raise ValueError("Number of groups must match number of blocks in BlockCovarianceDesign.")
+                raise ValueError(
+                    "Number of groups must match number of blocks in BlockCovarianceDesign."
+                )
             for block, ps in zip(design.blocks, groups.ps):
                 set_groups(block, ps)
             design.groups = groups
         else:
             design.p = p
+
     elif isinstance(groups_or_p, int):
         if groups_or_p <= 0:
             raise ValueError("'groups_or_p' as an integer must be a positive value.")
+        
         if isinstance(design, BlockCovarianceDesign):
             for block in design.blocks:
                 set_groups(block, groups_or_p)
         else:
             design.p = groups_or_p
+
     else:
         raise TypeError("groups_or_p must be an instance of GroupedFeatures or int.")
