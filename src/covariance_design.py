@@ -8,28 +8,33 @@ and specific implementations for different types of covariance matrices.
 
 Key components:
 
-1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues and 
-   associated probabilities.
+1. DiscreteNonParametric: A class representing discrete non-parametric spectra with eigenvalues λ_i and 
+   associated probabilities p_i, where Σ_i p_i = 1.
 
 2. CovarianceDesign: An abstract base class defining the interface for all covariance matrix designs.
+   It specifies methods for obtaining the covariance matrix Σ, its number of features p, and its spectrum.
 
 3. Specific covariance designs:
-   - AR1Design: Implements an AutoRegressive model of order 1.
-   - DiagonalCovarianceDesign: An abstract base class for diagonal covariance matrices.
-   - IdentityCovarianceDesign: Constructs an identity covariance matrix.
-   - UniformScalingCovarianceDesign: Creates a diagonal matrix with uniform scaling.
-   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics.
+   - AR1Design: Implements an AutoRegressive model of order 1, where Σ_{ij} = ρ^{|i-j|}, ρ ∈ [0, 1).
+   - DiagonalCovarianceDesign: An abstract base class for diagonal covariance matrices, where Σ_{ij} = 0 for i ≠ j.
+   - IdentityCovarianceDesign: Constructs an identity covariance matrix, where Σ_{ij} = δ_{ij}.
+   - UniformScalingCovarianceDesign: Creates a diagonal matrix with uniform scaling, where Σ_{ii} = c for all i.
+   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics,
+     where λ_i = (1/rate) * log(1/t_i), and t_i are uniformly spaced in (1/(2p), 1 - 1/(2p)).
 
-4. BlockDiagonal: A class for representing block diagonal matrices.
+4. BlockDiagonal: A class for representing block diagonal matrices of the form:
+   Σ = diag(Σ_1, Σ_2, ..., Σ_k), where each Σ_i is a square matrix.
 
-5. MixtureModel: Represents a mixture of multiple spectra with associated mixing proportions.
+5. MixtureModel: Represents a mixture of multiple spectra with associated mixing proportions,
+   where Σ = Σ_{i=1}^k π_i * Σ_i, and Σ_i π_i = 1.
 
-6. BlockCovarianceDesign: Constructs complex covariance structures by composing multiple covariance designs.
+6. BlockCovarianceDesign: Constructs complex covariance structures by composing multiple covariance designs,
+   allowing for hierarchical covariance structures.
 
 7. Utility functions:
    - block_diag: Constructs a block diagonal matrix from input arrays.
-   - simulate_rotated_design: Simulates a rotated design matrix based on a given covariance design.
-   - set_groups: Configures feature groups for covariance designs.
+   - simulate_rotated_design: Simulates a rotated design matrix X = ZL, where L is the Cholesky decomposition of Σ.
+   - set_groups: Configures feature groups for covariance designs, allowing for grouped structure in Σ.
 """
 
 from abc import ABC, abstractmethod
