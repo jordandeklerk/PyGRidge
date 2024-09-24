@@ -777,9 +777,9 @@ class BasicGroupRidgeWorkspace:
 
 def lambda_lolas_rule(rdg: BasicGroupRidgeWorkspace, multiplier: float = 0.1) -> float:
     """
-    Compute the regularization parameter λ using the LOLAS (Leave-One-Out Least Angle Shrinkage) rule.
+    Compute the regularization parameter λ using the Panagiotis Lolas rule.
     
-    The LOLAS rule provides a heuristic for selecting the regularization parameter based on
+    The Lolas rule provides a heuristic for selecting the regularization parameter based on
     the model's degrees of freedom and the trace of X^T X. This method balances
     the complexity of the model against its fit to the training data.
     
