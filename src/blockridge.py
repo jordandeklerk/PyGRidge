@@ -102,8 +102,10 @@ Key Components
 
 3. Regularization Parameter Tuning
 
-   - lambda_lolas_rule: Implements the Leave-One-Out Least Angle Shrinkage (LOLAS) rule for
-     selecting λ. It provides a heuristic based on balancing model complexity with data fit.
+   - lambda_lolas_rule: Compute the regularization parameter λ using the Panagiotis Lolas rule.
+     The Lolas rule provides a heuristic for selecting the regularization parameter based on
+     the model's degrees of freedom and the trace of X^T X. This method balances the complexity
+     of the model against its fit to the training data.
    - MomentTunerSetup: Prepares moment-based statistics (e.g., norms of coefficient vectors,
      design matrix properties) required for tuning λ_g.
    - sigma_squared_path: Computes the regularization path by varying the noise variance σ²,
