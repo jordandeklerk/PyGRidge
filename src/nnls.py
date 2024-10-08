@@ -64,6 +64,7 @@ Features and Capabilities
 - Logging: Incorporates a logging system for tracking algorithm progress and debugging.
 """
 
+
 import numpy as np
 from typing import Union, Optional
 from functools import partial
@@ -131,37 +132,29 @@ def nonneg_lsq(
     ValueError
         If the specified algorithm is not recognized.
     """
-    try:
-        # Input validation
-        if not isinstance(A, np.ndarray) or not isinstance(B, np.ndarray):
-            raise InvalidInputError("A and B must be numpy arrays.")
-        
-        if A.size == 0 or B.size == 0:
-            raise InvalidInputError("Input matrices A and B must not be empty.")
-        
-        if B.ndim == 1:
-            B = B[:, np.newaxis]
-        
-        if not gram and A.shape[0] != B.shape[0]:
-            raise InvalidInputError(f"Incompatible shapes: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
-        
-        if gram and A.shape[0] != A.shape[1]:
-            raise InvalidInputError("When gram=True, A must be a square matrix.")
-        
-        if gram and A.shape[0] != B.shape[0]:
-            raise InvalidInputError(f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
-        
-        if alg == 'fnnls':
-            return fnnls(A, B, gram=gram, use_parallel=use_parallel, tol=tol, max_iter=max_iter, **kwargs)
-        else:
-            raise ValueError(f"Specified algorithm '{alg}' not recognized.")
+    # Input validation
+    if not isinstance(A, np.ndarray) or not isinstance(B, np.ndarray):
+        raise InvalidInputError("A and B must be numpy arrays.")
     
-    except NNLSError as e:
-        logger.error(f"NNLS Error: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in nonneg_lsq: {str(e)}")
-        raise
+    if A.size == 0 or B.size == 0:
+        raise InvalidInputError("Input matrices A and B must not be empty.")
+    
+    if B.ndim == 1:
+        B = B[:, np.newaxis]
+    
+    if not gram and A.shape[0] != B.shape[0]:
+        raise InvalidInputError(f"Incompatible shapes: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
+    
+    if gram and A.shape[0] != A.shape[1]:
+        raise InvalidInputError("When gram=True, A must be a square matrix.")
+    
+    if gram and A.shape[0] != B.shape[0]:
+        raise InvalidInputError(f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
+    
+    if alg == 'fnnls':
+        return fnnls(A, B, gram=gram, use_parallel=use_parallel, tol=tol, max_iter=max_iter, **kwargs)
+    else:
+        raise ValueError(f"Specified algorithm '{alg}' not recognized.")
 
 def fnnls(
     A: np.ndarray,
@@ -204,45 +197,37 @@ def fnnls(
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.
     """
-    try:
-        if B.ndim == 1:
-            B = B[:, np.newaxis]
+    if B.ndim == 1:
+        B = B[:, np.newaxis]
 
-        n, k = B.shape
+    n, k = B.shape
 
-        if gram:
-            AtA = A
-            AtB = B
-        else:
-            AtA = A.T @ A
-            AtB = A.T @ B
+    if gram:
+        AtA = A
+        AtB = B
+    else:
+        AtA = A.T @ A
+        AtB = A.T @ B
 
-        if max_iter is None:
-            max_iter = 30 * AtA.shape[0]
+    if max_iter is None:
+        max_iter = 30 * AtA.shape[0]
 
-        if use_parallel and cpu_count() > 1 and k > 1:
-            # Define a partial function with fixed AtA and kwargs
-            solve_fn = partial(fnnls_core, AtA, tol=tol, max_iter=max_iter, **kwargs)
-            X = np.column_stack(
-                Parallel(n_jobs=-1)(
-                    delayed(solve_fn)(AtB[:, i]) for i in range(k)
-                )
+    if use_parallel and cpu_count() > 1 and k > 1:
+        # Define a partial function with fixed AtA and kwargs
+        solve_fn = partial(fnnls_core, AtA, tol=tol, max_iter=max_iter, **kwargs)
+        X = np.column_stack(
+            Parallel(n_jobs=-1)(
+                delayed(solve_fn)(AtB[:, i]) for i in range(k)
             )
-        else:
-            X = np.zeros_like(AtB)
-            for i in range(k):
-                X[:, i] = fnnls_core(AtA, AtB[:, i], tol=tol, max_iter=max_iter, **kwargs)
-        
-        if B.shape[1] == 1:
-            return X.ravel()
-        return X
+        )
+    else:
+        X = np.zeros_like(AtB)
+        for i in range(k):
+            X[:, i] = fnnls_core(AtA, AtB[:, i], tol=tol, max_iter=max_iter, **kwargs)
     
-    except NNLSError as e:
-        logger.error(f"FNNLS Error: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in fnnls: {str(e)}")
-        raise
+    if B.shape[1] == 1:
+        return X.ravel()
+    return X
 
 def fnnls_core(
     AtA: np.ndarray,
@@ -277,25 +262,58 @@ def fnnls_core(
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.
     """
-    try:
-        n = AtA.shape[0]
-        x = np.zeros(n, dtype=AtA.dtype)
-        s = np.zeros(n, dtype=AtA.dtype)
+    n = AtA.shape[0]
+    x = np.zeros(n, dtype=AtA.dtype)
+    s = np.zeros(n, dtype=AtA.dtype)
 
-        P = x > tol
-        w = Atb - AtA @ x
+    P = x > tol
+    w = Atb - AtA @ x
 
-        iter_count = 0
+    iter_count = 0
 
-        while np.sum(P) < n and np.any(w[~P] > tol):
-            # Mask w where P is False
-            w_masked = np.where(~P, w, -np.inf)
-            i = np.argmax(w_masked)
-            if w_masked[i] == -np.inf:
-                break  # No eligible index found
-            P[i] = True
+    while np.sum(P) < n and np.any(w[~P] > tol):
+        # Mask w where P is False
+        w_masked = np.where(~P, w, -np.inf)
+        i = np.argmax(w_masked)
+        if w_masked[i] == -np.inf:
+            break  # No eligible index found
+        P[i] = True
 
-            # Solve least squares for variables in P
+        # Solve least squares for variables in P
+        AtA_P = AtA[np.ix_(P, P)]
+        Atb_P = Atb[P]
+        try:
+            s_P = np.linalg.solve(AtA_P, Atb_P)
+        except np.linalg.LinAlgError:
+            s_P = np.linalg.lstsq(AtA_P, Atb_P, rcond=None)[0]
+        
+        s[P] = s_P
+        s[~P] = 0.0
+
+        # Inner loop: enforce non-negativity
+        while np.any(s[P] <= tol):
+            iter_count += 1
+            if iter_count >= max_iter:
+                raise ConvergenceError(f"FNNLS failed to converge after {max_iter} iterations.")
+
+            # Indices where s <= tol and P is True
+            mask = (s <= tol) & P
+            if not np.any(mask):
+                break
+
+            ind = np.where(mask)[0]
+            with np.errstate(divide='ignore', invalid='ignore'):
+                alpha = np.min(x[ind] / (x[ind] - s[ind]))
+                alpha = np.minimum(alpha, 1.0)
+
+            # Update x
+            x += alpha * (s - x)
+            x = np.maximum(x, 0.0)  # Ensure numerical stability
+
+            # Remove variables where x is approximately zero
+            P = x > tol
+
+            # Recompute s for the new P
             AtA_P = AtA[np.ix_(P, P)]
             Atb_P = Atb[P]
             try:
@@ -303,54 +321,13 @@ def fnnls_core(
             except np.linalg.LinAlgError:
                 s_P = np.linalg.lstsq(AtA_P, Atb_P, rcond=None)[0]
             
+            s = np.zeros_like(s)
             s[P] = s_P
-            s[~P] = 0.0
 
-            # Inner loop: enforce non-negativity
-            while np.any(s[P] <= tol):
-                iter_count += 1
-                if iter_count >= max_iter:
-                    raise ConvergenceError(f"FNNLS failed to converge after {max_iter} iterations.")
+        x = s.copy()
+        w = Atb - AtA @ x
 
-                # Indices where s <= tol and P is True
-                mask = (s <= tol) & P
-                if not np.any(mask):
-                    break
+    if iter_count >= max_iter:
+        raise ConvergenceError(f"FNNLS failed to converge after {max_iter} iterations.")
 
-                ind = np.where(mask)[0]
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    alpha = np.min(x[ind] / (x[ind] - s[ind]))
-                    alpha = np.minimum(alpha, 1.0)
-
-                # Update x
-                x += alpha * (s - x)
-                x = np.maximum(x, 0.0)  # Ensure numerical stability
-
-                # Remove variables where x is approximately zero
-                P = x > tol
-
-                # Recompute s for the new P
-                AtA_P = AtA[np.ix_(P, P)]
-                Atb_P = Atb[P]
-                try:
-                    s_P = np.linalg.solve(AtA_P, Atb_P)
-                except np.linalg.LinAlgError:
-                    s_P = np.linalg.lstsq(AtA_P, Atb_P, rcond=None)[0]
-                
-                s = np.zeros_like(s)
-                s[P] = s_P
-
-            x = s.copy()
-            w = Atb - AtA @ x
-
-        if iter_count >= max_iter:
-            raise ConvergenceError(f"FNNLS failed to converge after {max_iter} iterations.")
-
-        return x
-    
-    except ConvergenceError as e:
-        logger.warning(f"Convergence issue in fnnls_core: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in fnnls_core: {str(e)}")
-        raise
+    return x
