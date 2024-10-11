@@ -44,8 +44,22 @@ pythonpath = [
 
 [tool.black]
 line-length = 88
-target-version = ['py37']
-include = '\.pyi?$'
+target-version = ['py39', 'py310', 'py311']
+preview = true
+exclude = '''
+/(
+    \.eggs         # exclude a few common directories in the
+  | \.git          # root of the project
+  | \.mypy_cache
+  | \.vscode
+  | build
+  | dist
+  | doc/_build
+  | doc/auto_examples
+  | sklearn/externals
+  | asv_benchmarks/env
+)/
+'''
 
 [tool.ruff]
 select = ["E", "F", "I"]
