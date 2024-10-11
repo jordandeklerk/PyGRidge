@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from ..src.merge_groups import merge_groups
+from PyGRidge.src.merge_groups import merge_groups
 
 @pytest.fixture
 def sample_data():
