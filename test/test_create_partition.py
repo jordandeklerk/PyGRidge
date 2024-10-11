@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from PyGRidge.src.create_partition import create_variable_groups
+from ..src.create_partition import create_variable_groups
 
 def test_numeric_input():
     vec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
