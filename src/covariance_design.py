@@ -1,41 +1,30 @@
+"""Create covariance matrix designs for various statistical models.
+
+This module implements a comprehensive suite of covariance matrix designs and related 
+utilities, designed for flexible and efficient construction of covariance structures 
+in statistical modeling, particularly suitable for complex hierarchical models.
+
+The module provides:
+
+1. Abstract and concrete covariance designs:
+   - CovarianceDesign: Base class for all covariance designs.
+   - AR1Design: Implements AutoRegressive model of order 1.
+   - DiagonalCovarianceDesign: Base class for diagonal covariance matrices.
+   - IdentityCovarianceDesign: Constructs identity covariance matrix.
+   - UniformScalingCovarianceDesign: Creates diagonal matrix with uniform scaling.
+   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics.
+
+2. Composite covariance structures:
+   - BlockDiagonal: Represents block diagonal matrices.
+   - MixtureModel: Implements mixture of multiple spectra with associated mixing proportions.
+   - BlockCovarianceDesign: Constructs complex covariance structures by composing multiple designs.
+
+3. Utility functions:
+   - block_diag: Constructs block diagonal matrix from input arrays.
+   - simulate_rotated_design: Simulates rotated design matrix.
+   - set_groups: Configures feature groups for covariance designs.
 """
-Covariance Design Module
-========================
 
-This module implements various covariance matrix designs. It provides a flexible framework for creating
-and manipulating different covariance structures. The module defines abstract classes for covariance designs
-and specific implementations for various types of covariance matrices.
-
-Key components:
-
-1. DiscreteNonParametric: Represents discrete non-parametric spectra with eigenvalues λ_i and 
-   associated probabilities p_i, where Σ_i p_i = 1.
-
-2. CovarianceDesign: Abstract base class defining the interface for all covariance matrix designs.
-   It specifies methods for obtaining the covariance matrix Σ, its number of features p, and its spectrum.
-
-3. Specific covariance designs:
-   - AR1Design: Implements an AutoRegressive model of order 1, where Σ_{ij} = ρ^{|i-j|}, ρ ∈ [0, 1).
-   - DiagonalCovarianceDesign: Abstract base class for diagonal covariance matrices, where Σ_{ij} = 0 for i ≠ j.
-   - IdentityCovarianceDesign: Constructs an identity covariance matrix, where Σ_{ij} = δ_{ij}.
-   - UniformScalingCovarianceDesign: Creates a diagonal matrix with uniform scaling, where Σ_{ii} = c for all i.
-   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics,
-     where λ_i = (1/rate) * log(1/t_i), and t_i are uniformly spaced in (1/(2p), 1 - 1/(2p)).
-
-4. BlockDiagonal: Represents block diagonal matrices of the form:
-   Σ = diag(Σ_1, Σ_2, ..., Σ_k), where each Σ_i is a square matrix.
-
-5. MixtureModel: Represents a mixture of multiple spectra with associated mixing proportions,
-   where Σ = Σ_{i=1}^k π_i * Σ_i, and Σ_i π_i = 1.
-
-6. BlockCovarianceDesign: Constructs complex covariance structures by composing multiple covariance designs,
-   allowing for hierarchical covariance structures.
-
-7. Utility functions:
-   - block_diag: Constructs a block diagonal matrix from input arrays.
-   - simulate_rotated_design: Simulates a rotated design matrix X = ZL, where L is the Cholesky decomposition of Σ.
-   - set_groups: Configures feature groups for covariance designs, allowing for grouped structure in Σ.
-"""
 
 from abc import ABC, abstractmethod
 from typing import List, Callable, Union

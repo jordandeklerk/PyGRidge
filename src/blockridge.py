@@ -1,165 +1,24 @@
-"""
-Blockridge Module
-=================
+"""Create regression estimators based on the group ridge regression.
 
-This module implements a comprehensive suite of Ridge regression predictors and related utilities,
-designed for efficient and flexible regularized linear regression, particularly suitable for
-high-dimensional data where the number of features p may be comparable to or exceed the number
-of samples n.
+This module implements a comprehensive suite of group Ridge regression predictors 
+and related utilities, designed for efficient and flexible regularized linear 
+regression, particularly suitable for high-dimensional data where the number 
+of features p may be comparable to or exceed the number of samples n.
 
-Overview
---------
+The module provides:
 
-Ridge regression addresses the problem of multicollinearity in linear regression models and
-provides a way to regularize the estimation of regression coefficients in high-dimensional
-settings. It adds a penalty term to the least squares objective function to shrink the
-coefficients towards zero, thereby reducing variance at the cost of introducing some bias.
+1. Abstract and concrete Ridge predictors:
+   - AbstractRidgePredictor: Base class for all Ridge predictors.
+   - CholeskyRidgePredictor: Uses Cholesky decomposition for p < n scenarios.
+   - WoodburyRidgePredictor: Employs Woodbury matrix identity for p > n cases.
+   - ShermanMorrisonRidgePredictor: Applies Sherman-Morrison formula for very large p.
 
-Mathematical Formulation
-------------------------
+2. BasicGroupRidgeWorkspace: Manages the entire Ridge regression workflow.
 
-Given a dataset with response vector Y ∈ R^n and design matrix X ∈ R^(n×p), Ridge regression
-solves the following optimization problem:
-
-minimize over β ∈ R^p:
-
-    L(β) = || Y - Xβ ||_2^2 + λ || β ||_2^2
-
-where:
-
-- β is the vector of regression coefficients.
-- λ ≥ 0 is the regularization parameter controlling the amount of shrinkage.
-
-The closed-form solution to this problem is:
-
-    β̂ = (X^T X + λ I_p)⁻¹ X^T Y
-
-where I_p is the p-dimensional identity matrix.
-
-Group-wise Regularization
--------------------------
-
-In many applications, features are naturally grouped (e.g., genes in biological pathways, pixels
-in image patches). Group-wise Ridge regression allows for different regularization parameters λ_g
-for each group g of features, leading to the optimization problem:
-
-minimize over β ∈ R^p:
-
-    L(β) = || Y - Xβ ||_2^2 + ∑_(g=1)^G λ_g || β_g ||_2^2
-
-where:
-
-- β_g is the subvector of β corresponding to group g.
-- G is the total number of groups.
-
-This approach allows for differential penalization of feature groups, which can improve model
-performance when some groups are believed to be more informative than others.
-
-Computational Challenges
-------------------------
-
-Computing the Ridge regression solution directly via matrix inversion can be computationally
-expensive or numerically unstable, especially when dealing with high-dimensional data (large p)
-or when p > n.
-
-This module addresses these challenges by implementing efficient computational methods leveraging
-matrix identities and decompositions, such as:
-
-- Cholesky decomposition for p < n
-- Woodbury matrix identity for p > n
-- Sherman-Morrison formula for very large p
-
-Regularization Parameter Tuning
--------------------------------
-
-Choosing appropriate values for the regularization parameters λ_g is crucial for model
-performance. This module provides advanced methods for tuning λ_g, including:
-
-- Moment-based approaches that use statistical properties of the data.
-- Regularization path analysis, which studies how the solution varies with λ_g.
-
-Key Components
---------------
-
-1. Abstract and Concrete Ridge Predictors
-
-   - AbstractRidgePredictor: Defines a common interface for all Ridge predictors in the module,
-     enforcing consistency and facilitating interchangeability.
-   - CholeskyRidgePredictor: Utilizes Cholesky decomposition, suitable when p < n. It efficiently
-     computes the solution by exploiting the positive-definite nature of X^T X + Λ.
-   - WoodburyRidgePredictor: Employs the Woodbury matrix identity, advantageous when p > n. It
-     inverts the regularized covariance matrix by converting it into a problem involving
-     inversion of an n x n matrix.
-   - ShermanMorrisonRidgePredictor: Applies the Sherman-Morrison formula for rank-one updates,
-     efficient for very high-dimensional data where p >> n.
-
-2. BasicGroupRidgeWorkspace
-
-   - Manages the entire Ridge regression workflow.
-   - Handles model fitting, prediction, and updating regularization parameters.
-   - Computes leverage scores and error metrics such as the leave-one-out (LOO) error.
-   - Leverages the appropriate Ridge predictor based on the dimensionality of the data.
-
-3. Regularization Parameter Tuning
-
-   - lambda_lolas_rule: Compute the regularization parameter λ using the Panagiotis Lolas rule.
-     The Lolas rule provides a heuristic for selecting the regularization parameter based on
-     the model's degrees of freedom and the trace of X^T X. This method balances the complexity
-     of the model against its fit to the training data.
-   - MomentTunerSetup: Prepares moment-based statistics (e.g., norms of coefficient vectors,
-     design matrix properties) required for tuning λ_g.
-   - sigma_squared_path: Computes the regularization path by varying the noise variance σ²,
-     allowing analysis of how the solution and error metrics change with different levels of
-     assumed noise.
-   - get_lambdas and get_alpha_s_squared: Helper functions that compute λ_g based on σ² and
-     moment-based statistics.
-
-Detailed Mathematical Explanations
-----------------------------------
-
-Cholesky Decomposition in Ridge Regression:
-
-When p < n, the matrix X^T X + Λ is p x p and positive definite (assuming λ > 0), making it
-suitable for Cholesky decomposition:
-
-    X^T X + Λ = L L^T
-
-where L is a lower triangular matrix. This decomposition allows efficient solving of the linear
-system for β̂ without explicitly computing the inverse.
-
-Woodbury Matrix Identity:
-
-When p > n, inverting the p x p matrix X^T X + Λ is computationally expensive. The Woodbury
-identity allows us to express the inverse in terms of an n x n matrix:
-
-    (X^T X + Λ)⁻¹ = Λ⁻¹ - Λ⁻¹ X^T (I_n + X Λ⁻¹ X^T)⁻¹ X Λ⁻¹
-
-This reduces computational cost since inverting an n x n matrix is more efficient when n << p.
-
-Sherman-Morrison Formula:
-
-For very large p, even the Woodbury identity may be computationally intensive. The
-Sherman-Morrison formula is used for rank-one updates to the inverse of X^T X + Λ, which can be
-efficient when sequentially updating the regularization parameters or when the data matrix X has
-special structure.
-
-Moment-based Regularization Parameter Tuning:
-
-The module includes methods for computing optimal λ_g based on moments of the data and
-coefficients:
-
-- α_g^2: The squared norm of the coefficients for group g, adjusted for σ^2.
-- γ_g: The ratio of the number of features in group g to the total number of samples.
-- λ_g: Computed as λ_g = (σ^2 γ_g) / α_g^2
-
-This approach ensures that groups with larger coefficients or more features are appropriately
-regularized.
-
-Regularization Path Analysis
-
-By computing the solution for a range of σ^2 values, users can analyze how the coefficients and
-error metrics change, aiding in the selection of optimal λ_g and understanding the model's
-sensitivity to regularization.
+3. Regularization parameter tuning utilities:
+   - lambda_lolas_rule: Computes λ using the Panagiotis Lolas rule.
+   - MomentTunerSetup: Prepares moment-based statistics for tuning λ.
+   - sigma_squared_path: Computes the regularization path for different σ² values.
 """
 
 

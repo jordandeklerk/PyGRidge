@@ -1,67 +1,27 @@
-"""
-NNLS Module
-============
+"""Solve Non-Negative Least Squares (NNLS) problems efficiently.
 
-The `nnls.py` module within the PyGRidge package provides robust implementations for solving
-Non-Negative Least Squares (NNLS) problems. NNLS is a fundamental optimization technique
-widely used in various scientific and engineering disciplines, including data fitting, machine
-learning, signal processing, and quantitative finance. This module offers flexible and efficient
-algorithms to find solutions that adhere to non-negativity constraints, ensuring that the resulting
-coefficients are physically interpretable and meaningful in practical applications.
+This module implements robust algorithms for solving NNLS problems, which are 
+fundamental in various scientific and engineering disciplines. It provides 
+efficient solutions that adhere to non-negativity constraints, ensuring 
+physically interpretable results.
 
-Overview
+The module provides:
 
-Given a matrix A ∈ ℝ^(m × n) and a target matrix B ∈ ℝ^(m × k),
-the goal is to find a solution matrix X ∈ ℝ^(n × k) that minimizes the Frobenius norm
-of the residuals while enforcing non-negativity on X:
+1. Core NNLS functions:
+   - nonneg_lsq: Main entry point for solving NNLS problems.
+   - fnnls: Implements the Fast Non-Negative Least Squares algorithm.
+   - fnnls_core: Core implementation of the FNNLS algorithm for a single problem.
 
-min_{X ≥ 0} || AX - B ||_F^2
+2. Custom exceptions:
+   - NNLSError: Base exception for NNLS-related errors.
+   - InvalidInputError: For invalid or incompatible input matrices.
+   - ConvergenceError: When the algorithm fails to converge.
 
-Here, ||·||_F denotes the Frobenius norm, and the constraint X ≥ 0 ensures that
-all elements of X are non-negative. This constraint is crucial in scenarios where negative
-coefficients lack physical or practical significance, such as in concentration measurements,
-image reconstruction, or portfolio optimization.
-
-Key Components
-
-1. Custom Exceptions
-
-- NNLSError: Base exception class for all NNLS-related errors.
-- InvalidInputError: Raised when the input matrices A or B are invalid, incompatible,
-  or do not meet the necessary conditions for the algorithms to operate correctly.
-- ConvergenceError: Raised when the algorithm fails to converge to a solution within the
-  specified number of iterations.
-
-2. Core Functions
-
-a. nonneg_lsq
-
-This function serves as the main entry point for solving NNLS problems. It provides a unified
-interface to various NNLS algorithms, currently supporting the Fast Non-Negative Least Squares
-(FNNLS) method. The function handles input validation, algorithm selection, and optional
-parallelization for improved performance on multi-core systems.
-
-b. fnnls
-
-This function implements the Fast Non-Negative Least Squares algorithm, which is an efficient
-method for solving large-scale NNLS problems. It supports both standard and Gram matrix inputs,
-allowing for flexibility in problem formulation and potential computational optimizations.
-
-c. fnnls_core
-
-This is the core implementation of the FNNLS algorithm, designed to solve a single NNLS problem.
-It employs an iterative approach with careful handling of numerical stability and convergence
-issues.
-
-Features and Capabilities
-
-- Flexible input handling: Supports both standard matrix inputs and pre-computed Gram matrices.
-- Parallelization: Offers optional parallel processing for multi-column target matrices.
-- Robust error handling: Provides informative error messages and custom exceptions for various
-  failure modes.
-- Configurable parameters: Allows fine-tuning of tolerance levels, iteration limits, and other
-  algorithm-specific parameters.
-- Logging: Incorporates a logging system for tracking algorithm progress and debugging.
+Main features:
+- Flexible input handling for standard and Gram matrix inputs.
+- Optional parallelization for multi-column target matrices.
+- Configurable parameters for fine-tuning algorithm behavior.
+- Comprehensive error checking and informative error messages.
 """
 
 

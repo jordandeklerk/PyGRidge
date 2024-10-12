@@ -1,42 +1,26 @@
-"""
-GroupedFeatures Module
-======================
+"""Create and manage grouped feature structures for statistical modeling.
 
-This module provides a flexible and efficient way to handle grouped features. It introduces
-the GroupedFeatures class, which represents a collection of features organized into groups
-of varying sizes. This module is particularly useful in scenarios where features naturally
-form groups, such as:
-- Multi-modal data analysis
-- Feature engineering with categorical variables
-- Dealing with repeated measurements in time series data
+This module implements a flexible system for handling grouped features, particularly 
+useful in scenarios involving multi-modal data, categorical variables, or time series 
+with repeated measurements.
 
-Key components:
+The module provides:
 
 1. GroupedFeatures class:
-   - Represents groups of features with customizable group sizes.
-   - Supports initialization with a list of group sizes or a uniform group size.
-   - Provides methods for accessing group information, summarizing groups, and expanding group-level data.
+   - Represents collections of features organized into groups.
+   - Supports initialization with variable or uniform group sizes.
+   - Offers methods for group indexing, summarization, and expansion.
 
 2. Utility functions:
-   - fill: A helper function to create lists filled with a specific value.
+   - fill: Creates lists filled with a specific value.
 
 Main features:
-
-- Flexible group creation: Create feature groups with different sizes or uniform sizes.
-- Group indexing: Easily access the index range for any group.
-- Group summaries: Apply custom functions to summarize data within each group.
-- Group expansion: Expand group-level data to feature-level data.
+- Flexible group creation and manipulation.
+- Efficient indexing and summarization of grouped data.
 - Support for both list and numpy.ndarray inputs.
-- Comprehensive error checking and informative error messages.
-
-Usage example:
-    gf = GroupedFeatures([2, 3, 4])  # Create groups of sizes 2, 3, and 4
-    gf.ngroups()  # Returns 3
-    gf.nfeatures()  # Returns 9
-    gf.group_idx(1)  # Returns range(2, 5) for the second group
-    gf.group_summary([1, 2, 3, 4, 5, 6, 7, 8, 9], sum)  # Returns [3, 12, 30]
-    gf.group_expand([10, 20, 30])  # Returns [10, 10, 20, 20, 20, 30, 30, 30, 30]
+- Comprehensive error checking with informative messages.
 """
+
 
 from typing import List, Callable, Union, TypeVar
 import numpy as np
