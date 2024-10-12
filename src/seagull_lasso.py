@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def seagull_lasso(
     y: np.ndarray,
     X: np.ndarray,
@@ -12,7 +13,7 @@ def seagull_lasso(
     proportion_xi: float,
     num_intervals: int,
     num_fixed_effects: int,
-    trace_progress: bool
+    trace_progress: bool,
 ) -> dict:
     """
     Lasso, group lasso, and sparse-group lasso
@@ -48,7 +49,9 @@ def seagull_lasso(
         accuracy_reached = False
         counter = 0
         if num_intervals > 1:
-            lambda_val = lambda_max * np.exp((interval / (num_intervals - 1)) * np.log(proportion_xi))
+            lambda_val = lambda_max * np.exp(
+                (interval / (num_intervals - 1)) * np.log(proportion_xi)
+            )
         else:
             lambda_val = lambda_max
 
@@ -75,13 +78,17 @@ def seagull_lasso(
 
                     # Check convergence
                     beta_diff = beta - beta_new
-                    loss_old = 0.5 * np.sum((y - X @ beta)**2) / n
-                    loss_new = 0.5 * np.sum((y - X @ beta_new)**2) / n
+                    loss_old = 0.5 * np.sum((y - X @ beta) ** 2) / n
+                    loss_new = 0.5 * np.sum((y - X @ beta_new) ** 2) / n
 
-                    if loss_new <= loss_old - np.dot(gradient, beta_diff) + (0.5 / time_step) * np.sum(beta_diff**2):
+                    if loss_new <= loss_old - np.dot(gradient, beta_diff) + (
+                        0.5 / time_step
+                    ) * np.sum(beta_diff**2):
                         # Adjust convergence criteria based on lambda value
                         conv_threshold = max(epsilon_convergence, lambda_val * 1e-4)
-                        if np.max(np.abs(beta_diff)) <= conv_threshold * np.linalg.norm(beta):
+                        if np.max(np.abs(beta_diff)) <= conv_threshold * np.linalg.norm(
+                            beta
+                        ):
                             accuracy_reached = True
                         beta = beta_new
                         criterion_fulfilled = True
@@ -108,7 +115,7 @@ def seagull_lasso(
             "max_iter": max_iterations,
             "gamma_bls": gamma,
             "xi": proportion_xi,
-            "loops_lambda": num_intervals
+            "loops_lambda": num_intervals,
         }
     else:
         return {
@@ -120,5 +127,5 @@ def seagull_lasso(
             "max_iter": max_iterations,
             "gamma_bls": gamma,
             "xi": proportion_xi,
-            "loops_lambda": num_intervals
+            "loops_lambda": num_intervals,
         }

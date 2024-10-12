@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Dict
 
+
 def seagull_sparse_group_lasso(
     y: np.ndarray,
     X: np.ndarray,
@@ -16,7 +17,7 @@ def seagull_sparse_group_lasso(
     proportion_xi: float,
     num_intervals: int,
     num_fixed_effects: int,
-    trace_progress: bool
+    trace_progress: bool,
 ) -> Dict:
     """
     Sparse-group lasso via proximal gradient descent.
@@ -70,7 +71,9 @@ def seagull_sparse_group_lasso(
         accuracy_reached = False
         counter = 1
         if num_intervals > 1:
-            lambda_val = lambda_max * np.exp((interval / (num_intervals - 1)) * np.log(proportion_xi))
+            lambda_val = lambda_max * np.exp(
+                (interval / (num_intervals - 1)) * np.log(proportion_xi)
+            )
         else:
             lambda_val = lambda_max
 
@@ -88,15 +91,17 @@ def seagull_sparse_group_lasso(
                 for i in range(num_groups):
                     start, end = index_start[i], index_end[i] + 1
                     temp = beta[start:end] - time_step * gradient[start:end]
-                    
+
                     # Soft-thresholding
-                    soft_threshold = alpha * time_step * lambda_val * feature_weights[start:end]
+                    soft_threshold = (
+                        alpha * time_step * lambda_val * feature_weights[start:end]
+                    )
                     temp = np.sign(temp) * np.maximum(np.abs(temp) - soft_threshold, 0)
-                    
+
                     # Soft-scaling
                     l2_norm = np.linalg.norm(temp)
                     threshold = time_step * (1 - alpha) * lambda_val * group_weights[i]
-                    
+
                     if l2_norm > threshold:
                         scaling = 1 - threshold / l2_norm
                         beta_new[start:end] = scaling * temp
@@ -105,11 +110,15 @@ def seagull_sparse_group_lasso(
 
                 # Check convergence
                 beta_diff = beta - beta_new
-                loss_old = 0.5 * np.sum((y - X @ beta)**2) / n
-                loss_new = 0.5 * np.sum((y - X @ beta_new)**2) / n
+                loss_old = 0.5 * np.sum((y - X @ beta) ** 2) / n
+                loss_new = 0.5 * np.sum((y - X @ beta_new) ** 2) / n
 
-                if loss_new <= loss_old - np.dot(gradient, beta_diff) + (0.5 / time_step) * np.sum(beta_diff**2):
-                    if np.max(np.abs(beta_diff)) <= epsilon_convergence * np.linalg.norm(beta):
+                if loss_new <= loss_old - np.dot(gradient, beta_diff) + (
+                    0.5 / time_step
+                ) * np.sum(beta_diff**2):
+                    if np.max(
+                        np.abs(beta_diff)
+                    ) <= epsilon_convergence * np.linalg.norm(beta):
                         accuracy_reached = True
                     beta = beta_new
                     criterion_fulfilled = True
@@ -137,7 +146,7 @@ def seagull_sparse_group_lasso(
             "max_iter": max_iterations,
             "gamma_bls": gamma,
             "xi": proportion_xi,
-            "loops_lambda": num_intervals
+            "loops_lambda": num_intervals,
         }
     else:
         return {
@@ -150,5 +159,5 @@ def seagull_sparse_group_lasso(
             "max_iter": max_iterations,
             "gamma_bls": gamma,
             "xi": proportion_xi,
-            "loops_lambda": num_intervals
+            "loops_lambda": num_intervals,
         }
