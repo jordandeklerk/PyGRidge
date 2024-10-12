@@ -73,31 +73,40 @@ from joblib import Parallel, delayed
 import logging
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class NNLSError(Exception):
     """Base exception class for NNLS-related errors."""
+
     pass
+
 
 class InvalidInputError(NNLSError):
     """Exception raised for invalid input to NNLS functions."""
+
     pass
+
 
 class ConvergenceError(NNLSError):
     """Exception raised when the algorithm fails to converge."""
+
     pass
+
 
 def nonneg_lsq(
     A: np.ndarray,
     B: Union[np.ndarray, np.ndarray],
-    alg: str = 'fnnls',
+    alg: str = "fnnls",
     gram: bool = False,
     use_parallel: bool = False,
     tol: float = 1e-8,
     max_iter: Optional[int] = None,
-    **kwargs
-) -> np.ndarray:    
+    **kwargs,
+) -> np.ndarray:
     """
     Solves the non-negative least squares problem.
 
@@ -124,7 +133,7 @@ def nonneg_lsq(
     -------
     np.ndarray
         Solution matrix X that minimizes ||A*X - B||_2 subject to X >= 0.
-    
+
     Raises:
     ------
     InvalidInputError
@@ -135,26 +144,40 @@ def nonneg_lsq(
     # Input validation
     if not isinstance(A, np.ndarray) or not isinstance(B, np.ndarray):
         raise InvalidInputError("A and B must be numpy arrays.")
-    
+
     if A.size == 0 or B.size == 0:
         raise InvalidInputError("Input matrices A and B must not be empty.")
-    
+
     if B.ndim == 1:
         B = B[:, np.newaxis]
-    
+
     if not gram and A.shape[0] != B.shape[0]:
-        raise InvalidInputError(f"Incompatible shapes: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
-    
+        raise InvalidInputError(
+            f"Incompatible shapes: A has {A.shape[0]} rows, B has {B.shape[0]} rows."
+        )
+
     if gram and A.shape[0] != A.shape[1]:
         raise InvalidInputError("When gram=True, A must be a square matrix.")
-    
+
     if gram and A.shape[0] != B.shape[0]:
-        raise InvalidInputError(f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has {B.shape[0]} rows.")
-    
-    if alg == 'fnnls':
-        return fnnls(A, B, gram=gram, use_parallel=use_parallel, tol=tol, max_iter=max_iter, **kwargs)
+        raise InvalidInputError(
+            f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has"
+            f" {B.shape[0]} rows."
+        )
+
+    if alg == "fnnls":
+        return fnnls(
+            A,
+            B,
+            gram=gram,
+            use_parallel=use_parallel,
+            tol=tol,
+            max_iter=max_iter,
+            **kwargs,
+        )
     else:
         raise ValueError(f"Specified algorithm '{alg}' not recognized.")
+
 
 def fnnls(
     A: np.ndarray,
@@ -163,7 +186,7 @@ def fnnls(
     use_parallel: bool = False,
     tol: float = 1e-8,
     max_iter: Optional[int] = None,
-    **kwargs
+    **kwargs,
 ) -> np.ndarray:
     """
     Solves the non-negative least squares problem using the FNNLS algorithm.
@@ -189,7 +212,7 @@ def fnnls(
     -------
     np.ndarray
         Solution matrix X that minimizes ||A*X - B||_2 subject to X >= 0.
-    
+
     Raises:
     ------
     InvalidInputError
@@ -216,25 +239,20 @@ def fnnls(
         # Define a partial function with fixed AtA and kwargs
         solve_fn = partial(fnnls_core, AtA, tol=tol, max_iter=max_iter, **kwargs)
         X = np.column_stack(
-            Parallel(n_jobs=-1)(
-                delayed(solve_fn)(AtB[:, i]) for i in range(k)
-            )
+            Parallel(n_jobs=-1)(delayed(solve_fn)(AtB[:, i]) for i in range(k))
         )
     else:
         X = np.zeros_like(AtB)
         for i in range(k):
             X[:, i] = fnnls_core(AtA, AtB[:, i], tol=tol, max_iter=max_iter, **kwargs)
-    
+
     if B.shape[1] == 1:
         return X.ravel()
     return X
 
+
 def fnnls_core(
-    AtA: np.ndarray,
-    Atb: np.ndarray,
-    tol: float = 1e-8,
-    max_iter: int = 300,
-    **kwargs
+    AtA: np.ndarray, Atb: np.ndarray, tol: float = 1e-8, max_iter: int = 300, **kwargs
 ) -> np.ndarray:
     """
     Core FNNLS algorithm to solve a single non-negative least squares problem.
@@ -256,7 +274,7 @@ def fnnls_core(
     -------
     np.ndarray
         Solution vector x that minimizes ||A*x - b||_2 subject to x >= 0.
-    
+
     Raises:
     ------
     ConvergenceError
@@ -286,7 +304,7 @@ def fnnls_core(
             s_P = np.linalg.solve(AtA_P, Atb_P)
         except np.linalg.LinAlgError:
             s_P = np.linalg.lstsq(AtA_P, Atb_P, rcond=None)[0]
-        
+
         s[P] = s_P
         s[~P] = 0.0
 
@@ -294,7 +312,9 @@ def fnnls_core(
         while np.any(s[P] <= tol):
             iter_count += 1
             if iter_count >= max_iter:
-                raise ConvergenceError(f"FNNLS failed to converge after {max_iter} iterations.")
+                raise ConvergenceError(
+                    f"FNNLS failed to converge after {max_iter} iterations."
+                )
 
             # Indices where s <= tol and P is True
             mask = (s <= tol) & P
@@ -302,7 +322,7 @@ def fnnls_core(
                 break
 
             ind = np.where(mask)[0]
-            with np.errstate(divide='ignore', invalid='ignore'):
+            with np.errstate(divide="ignore", invalid="ignore"):
                 alpha = np.min(x[ind] / (x[ind] - s[ind]))
                 alpha = np.minimum(alpha, 1.0)
 
@@ -320,7 +340,7 @@ def fnnls_core(
                 s_P = np.linalg.solve(AtA_P, Atb_P)
             except np.linalg.LinAlgError:
                 s_P = np.linalg.lstsq(AtA_P, Atb_P, rcond=None)[0]
-            
+
             s = np.zeros_like(s)
             s[P] = s_P
 

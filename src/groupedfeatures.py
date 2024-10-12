@@ -41,7 +41,8 @@ Usage example:
 from typing import List, Callable, Union, TypeVar
 import numpy as np
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class GroupedFeatures:
     """
@@ -58,7 +59,9 @@ class GroupedFeatures:
         :raises ValueError: If any group size is not positive.
         """
         if not isinstance(ps, list):
-            raise TypeError(f"ps must be a list of positive integers, got {type(ps).__name__}")
+            raise TypeError(
+                f"ps must be a list of positive integers, got {type(ps).__name__}"
+            )
         if not all(isinstance(p, int) for p in ps):
             raise TypeError("All group sizes in ps must be integers")
         if not all(p > 0 for p in ps):
@@ -80,9 +83,13 @@ class GroupedFeatures:
         :raises ValueError: If group_size or num_groups is not positive.
         """
         if not isinstance(group_size, int):
-            raise TypeError(f"group_size must be an integer, got {type(group_size).__name__}")
+            raise TypeError(
+                f"group_size must be an integer, got {type(group_size).__name__}"
+            )
         if not isinstance(num_groups, int):
-            raise TypeError(f"num_groups must be an integer, got {type(num_groups).__name__}")
+            raise TypeError(
+                f"num_groups must be an integer, got {type(num_groups).__name__}"
+            )
         if group_size <= 0:
             raise ValueError("group_size must be a positive integer")
         if num_groups <= 0:
@@ -118,7 +125,9 @@ class GroupedFeatures:
         if not isinstance(i, int):
             raise TypeError(f"Group index i must be an integer, got {type(i).__name__}")
         if not (0 <= i < self.num_groups):
-            raise IndexError(f"Group index i={i} is out of range [0, {self.num_groups -1}]")
+            raise IndexError(
+                f"Group index i={i} is out of range [0, {self.num_groups -1}]"
+            )
 
         starts = np.cumsum([0] + self.ps[:-1]).astype(int)
         ends = np.cumsum(self.ps).astype(int)
@@ -127,7 +136,7 @@ class GroupedFeatures:
     def group_summary(
         self,
         vec: Union[List[T], np.ndarray],
-        f: Callable[[Union[List[T], np.ndarray]], T]
+        f: Callable[[Union[List[T], np.ndarray]], T],
     ) -> List[T]:
         """
         Apply a summary function to each group of features.
@@ -144,27 +153,44 @@ class GroupedFeatures:
         if isinstance(vec, np.ndarray):
             if vec.ndim == 2:
                 if vec.shape[1] != self.p:
-                    raise ValueError(f"Length of vec ({vec.shape[1]}) does not match number of features ({self.p})")
+                    raise ValueError(
+                        f"Length of vec ({vec.shape[1]}) does not match number of"
+                        f" features ({self.p})"
+                    )
             elif vec.ndim == 1:
                 if vec.shape[0] != self.p:
-                    raise ValueError(f"Length of vec ({vec.shape[0]}) does not match number of features ({self.p})")
+                    raise ValueError(
+                        f"Length of vec ({vec.shape[0]}) does not match number of"
+                        f" features ({self.p})"
+                    )
                 vec = vec.reshape(1, -1)
             else:
                 raise ValueError(f"vec must be 1D or 2D, got {vec.ndim}D")
         elif not isinstance(vec, list):
-            raise TypeError(f"vec must be either a list or ndarray, got {type(vec).__name__}")
+            raise TypeError(
+                f"vec must be either a list or ndarray, got {type(vec).__name__}"
+            )
         else:
             if len(vec) != self.p:
-                raise ValueError(f"Length of vec ({len(vec)}) does not match number of features ({self.p})")
+                raise ValueError(
+                    f"Length of vec ({len(vec)}) does not match number of features"
+                    f" ({self.p})"
+                )
 
         summaries = []
         for i in range(self.num_groups):
             idx = self.group_idx(i)
             try:
-                group_features = [vec[j] for j in idx] if isinstance(vec, list) else vec[:, idx.start:idx.stop]
+                group_features = (
+                    [vec[j] for j in idx]
+                    if isinstance(vec, list)
+                    else vec[:, idx.start : idx.stop]
+                )
                 summaries.append(f(group_features))
             except Exception as e:
-                raise RuntimeError(f"Error applying function to group {idx.start}-{idx.stop}: {e}")
+                raise RuntimeError(
+                    f"Error applying function to group {idx.start}-{idx.stop}: {e}"
+                )
 
         return summaries
 
@@ -186,7 +212,8 @@ class GroupedFeatures:
         if isinstance(vec_or_num, (list, np.ndarray)):
             if len(vec_or_num) != self.num_groups:
                 raise ValueError(
-                    f"Length of vec_or_num ({len(vec_or_num)}) does not match number of groups ({self.num_groups})"
+                    f"Length of vec_or_num ({len(vec_or_num)}) does not match number of"
+                    f" groups ({self.num_groups})"
                 )
             # If it's an ndarray, convert to list
             if isinstance(vec_or_num, np.ndarray):
@@ -194,12 +221,14 @@ class GroupedFeatures:
             arr = [0.0] * self.p
             for i in range(self.num_groups):
                 idx = self.group_idx(i)
-                arr[idx.start:idx.stop] = [vec_or_num[i]] * len(idx)
+                arr[idx.start : idx.stop] = [vec_or_num[i]] * len(idx)
             return arr
 
         raise TypeError(
-            f"vec_or_num must be either a number (int or float) or a list/ndarray, got {type(vec_or_num).__name__}"
+            "vec_or_num must be either a number (int or float) or a list/ndarray, got"
+            f" {type(vec_or_num).__name__}"
         )
+
 
 def fill(value: T, length: int) -> List[T]:
     """

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from unittest.mock import Mock, patch 
+from unittest.mock import Mock, patch
 
 from ..src.covariance_design import (
     DiscreteNonParametric,
@@ -15,10 +15,11 @@ from ..src.covariance_design import (
     BlockCovarianceDesign,
     block_diag,
     simulate_rotated_design,
-    set_groups
+    set_groups,
 )
 
-from ..src.groupedfeatures import GroupedFeatures  
+from ..src.groupedfeatures import GroupedFeatures
+
 
 # ------------------------------
 # Tests for DiscreteNonParametric
@@ -266,11 +267,11 @@ def test_mixture_model_valid():
     eigs1 = [1.0, 2.0]
     probs1 = [0.5, 0.5]
     spectrum1 = DiscreteNonParametric(eigs=eigs1, probs=probs1)
-    
+
     eigs2 = [3.0, 4.0]
     probs2 = [0.3, 0.7]
     spectrum2 = DiscreteNonParametric(eigs=eigs2, probs=probs2)
-    
+
     mixture = MixtureModel(spectra=[spectrum1, spectrum2], mixing_prop=[0.6, 0.4])
     assert mixture.spectra == [spectrum1, spectrum2]
     assert mixture.mixing_prop == [0.6, 0.4]
@@ -323,43 +324,43 @@ def test_block_covariance_design_valid():
     # Create covariance designs
     block1 = IdentityCovarianceDesign(p=2)
     block2 = UniformScalingCovarianceDesign(scaling=3.0, p=3)
-    
+
     # Define groups corresponding to each block
     groups = GroupedFeatures(ps=[2, 3])
-    
+
     # Instantiate BlockCovarianceDesign with groups
     block_design = BlockCovarianceDesign(blocks=[block1, block2], groups=groups)
-    
+
     # Get Sigma and construct expected Sigma using block_diag
     Sigma = block_design.get_Sigma()
     expected_Sigma = block_diag(block1.get_Sigma(), block2.get_Sigma())
     np.testing.assert_array_equal(Sigma, expected_Sigma)
-    
+
     assert block_design.nfeatures() == 5
     spectrum = block_design.spectrum()
-    
+
     assert isinstance(spectrum, MixtureModel)
     assert len(spectrum.spectra) == 2
-    np.testing.assert_allclose(spectrum.mixing_prop, [2/5, 3/5])
+    np.testing.assert_allclose(spectrum.mixing_prop, [2 / 5, 3 / 5])
 
 
 def test_block_covariance_design_with_groups():
     groups = GroupedFeatures(ps=[2, 3])
-    
+
     block1 = IdentityCovarianceDesign(p=2)
     block2 = UniformScalingCovarianceDesign(scaling=3.0, p=3)
     block_design = BlockCovarianceDesign(blocks=[block1, block2], groups=groups)
-    
+
     set_groups(block_design, groups)
-    
+
     Sigma = block_design.get_Sigma()
     expected_Sigma = block_diag(block1.get_Sigma(), block2.get_Sigma())
     np.testing.assert_array_equal(Sigma, expected_Sigma)
-    
+
     spectrum = block_design.spectrum()
     assert isinstance(spectrum, MixtureModel)
     assert len(spectrum.spectra) == 2
-    assert spectrum.mixing_prop == [2/5, 3/5]
+    assert spectrum.mixing_prop == [2 / 5, 3 / 5]
 
 
 def test_block_covariance_design_invalid_blocks_type():
@@ -382,7 +383,10 @@ def test_block_covariance_design_groups_blocks_mismatch():
     groups = GroupedFeatures(ps=[2, 3, 1])  # 3 groups, but only 2 blocks
     block1 = IdentityCovarianceDesign(p=2)
     block2 = UniformScalingCovarianceDesign(scaling=3.0, p=3)
-    with pytest.raises(ValueError, match="Number of groups must match number of blocks in BlockCovarianceDesign."):
+    with pytest.raises(
+        ValueError,
+        match="Number of groups must match number of blocks in BlockCovarianceDesign.",
+    ):
         BlockCovarianceDesign(blocks=[block1, block2], groups=groups)
 
 
@@ -392,12 +396,16 @@ def test_block_covariance_design_spectrum_sum_not_one():
     block1.spectrum.return_value = DiscreteNonParametric(eigs=[1.0], probs=[1.0])
     block2 = Mock(spec=CovarianceDesign)
     block2.spectrum.return_value = DiscreteNonParametric(eigs=[2.0], probs=[1.0])
-    
+
     block_design = BlockCovarianceDesign(blocks=[block1, block2])
-    
+
     with pytest.raises(ValueError):
         # Manually set mixing_prop to not sum to 1
-        block_design.spectrum = Mock(return_value=MixtureModel(spectra=[block1.spectrum(), block2.spectrum()], mixing_prop=[0.6, 0.5]))
+        block_design.spectrum = Mock(
+            return_value=MixtureModel(
+                spectra=[block1.spectrum(), block2.spectrum()], mixing_prop=[0.6, 0.5]
+            )
+        )
         block_design.spectrum()
 
 
@@ -408,10 +416,7 @@ def test_block_diag_valid():
     A = np.array([[1, 0], [0, 1]])
     B = np.array([[2, 0], [0, 2]])
     result = block_diag(A, B)
-    expected = np.array([[1, 0, 0, 0],
-                         [0, 1, 0, 0],
-                         [0, 0, 2, 0],
-                         [0, 0, 0, 2]])
+    expected = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]])
     np.testing.assert_array_equal(result, expected)
 
 
@@ -447,8 +452,14 @@ def test_block_diag_exception_handling():
     B = np.array([[2, 0], [0, 2]])
     block_diag_obj = BlockDiagonal(blocks=[A, B])
 
-    with patch('PyGRidge.src.covariance_design.block_diag', side_effect=Exception("Mocked exception")):
-        with pytest.raises(RuntimeError, match="Failed to construct block diagonal matrix: Mocked exception"):
+    with patch(
+        "PyGRidge.src.covariance_design.block_diag",
+        side_effect=Exception("Mocked exception"),
+    ):
+        with pytest.raises(
+            RuntimeError,
+            match="Failed to construct block diagonal matrix: Mocked exception",
+        ):
             Sigma = block_diag_obj.get_Sigma()
 
 
@@ -491,7 +502,9 @@ def test_simulate_rotated_design_invalid_rotated_measure():
 def test_simulate_rotated_design_sigma_not_positive_definite():
     # Create a covariance design that returns a non-positive definite matrix
     mock_cov = Mock(spec=CovarianceDesign)
-    mock_cov.get_Sigma.return_value = np.array([[1, 2], [2, 1]])  # Not positive definite
+    mock_cov.get_Sigma.return_value = np.array(
+        [[1, 2], [2, 1]]
+    )  # Not positive definite
     mock_cov.nfeatures.return_value = 2
     with pytest.raises(ValueError):
         simulate_rotated_design(cov=mock_cov, n=5)
@@ -532,7 +545,7 @@ def test_simulate_rotated_design_rotated_measure_output_invalid():
 
 def test_simulate_rotated_design_rotated_measure_shape_mismatch():
     def faulty_measure(size):
-        return np.random.normal(size=(size[0], size[1]+1))  # Incorrect shape
+        return np.random.normal(size=(size[0], size[1] + 1))  # Incorrect shape
 
     ar1 = AR1Design(p=2, rho=0.5)
     with pytest.raises(ValueError):
@@ -579,10 +592,12 @@ def test_set_groups_with_invalid_groups_or_p_type():
     ar1 = AR1Design(p=None, rho=0.5)
     with pytest.raises(TypeError):
         set_groups(ar1, "invalid_type")
-        
+
 
 def test_set_groups_with_GroupedFeatures_invalid_group_sizes():
-    with pytest.raises(ValueError, match="All group sizes in ps must be positive integers"):
+    with pytest.raises(
+        ValueError, match="All group sizes in ps must be positive integers"
+    ):
         GroupedFeatures(ps=[2, -3])  # Negative group size
 
 
@@ -598,9 +613,9 @@ def test_set_groups_with_BlockCovarianceDesign_non_GroupedFeatures():
     block1 = IdentityCovarianceDesign(p=None)
     block2 = UniformScalingCovarianceDesign(scaling=3.0, p=None)
     block_design = BlockCovarianceDesign(blocks=[block1, block2])
-    
+
     set_groups(block_design, 5)
-    
+
     assert block_design.groups is None
     assert block1.p == 5
     assert block2.p == 5
