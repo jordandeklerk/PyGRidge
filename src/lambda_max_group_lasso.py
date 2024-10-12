@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def lambda_max_group_lasso(y, groups, feature_weights, beta, X):
     """
     Maximal lambda for group lasso regularization.
@@ -31,7 +32,7 @@ def lambda_max_group_lasso(y, groups, feature_weights, beta, X):
         index_start[i] = group_indices[0]
         index_end[i] = group_indices[-1]
         group_weights[i] = np.sum(feature_weights[group_mask])
-    
+
     group_weights = np.sqrt(group_weights)
 
     # Treatment if unpenalized features are involved
@@ -52,7 +53,9 @@ def lambda_max_group_lasso(y, groups, feature_weights, beta, X):
         else:
             temp = n * group_weights[i]
             group_slice = slice(index_start[i], index_end[i] + 1)
-            l2_norm_groups[i] = np.linalg.norm(X_transp_residual_active[group_slice]) / temp
+            l2_norm_groups[i] = (
+                np.linalg.norm(X_transp_residual_active[group_slice]) / temp
+            )
 
     # Determine lambda_max and perform numeric correction
     lambda_max = np.max(np.abs(l2_norm_groups))

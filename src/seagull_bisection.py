@@ -1,7 +1,9 @@
 import numpy as np
 
+
 def sqrt_double(x):
     return np.sqrt(x)
+
 
 def seagull_bisection(
     rows: int,
@@ -10,7 +12,7 @@ def seagull_bisection(
     right_border: float,
     group_weight: float,
     vector_weights: np.ndarray,
-    vector_in: np.ndarray
+    vector_in: np.ndarray,
 ) -> float:
     """
     Internal bisection algorithm
@@ -73,14 +75,14 @@ def seagull_bisection(
                 temp_left = vector_in[i] - alpha * left_border * vector_weights[i]
                 temp_mid = vector_in[i] - alpha * mid_point * vector_weights[i]
                 temp_right = vector_in[i] - alpha * right_border * vector_weights[i]
-            
+
             func_left += max(0, temp_left) ** 2
             func_mid += max(0, temp_mid) ** 2
             func_right += max(0, temp_right) ** 2
 
-        func_left -= (1.0 - alpha) ** 2 * left_border ** 2 * group_weight
-        func_mid -= (1.0 - alpha) ** 2 * mid_point ** 2 * group_weight
-        func_right -= (1.0 - alpha) ** 2 * right_border ** 2 * group_weight
+        func_left -= (1.0 - alpha) ** 2 * left_border**2 * group_weight
+        func_mid -= (1.0 - alpha) ** 2 * mid_point**2 * group_weight
+        func_right -= (1.0 - alpha) ** 2 * right_border**2 * group_weight
 
         # Check for change of sign within sub-intervals and redo bisection
         if func_left * func_mid <= 0.0:

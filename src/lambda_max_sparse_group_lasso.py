@@ -1,13 +1,14 @@
 import numpy as np
 from seagull_bisection import seagull_bisection
 
+
 def lambda_max_sparse_group_lasso(
     alpha: float,
     vector_y: np.ndarray,
     vector_groups: np.ndarray,
     vector_weights_features: np.ndarray,
     vector_beta: np.ndarray,
-    matrix_x: np.ndarray
+    matrix_x: np.ndarray,
 ) -> float:
     """
     Maximal lambda
@@ -58,7 +59,9 @@ def lambda_max_sparse_group_lasso(
     if number_zeros_weights > 0:
         active_mask = vector_weights_features == 0
         matrix_x_active = matrix_x[:, active_mask]
-        vector_beta_active = np.linalg.solve(matrix_x_active.T @ matrix_x_active, matrix_x_active.T @ vector_y)
+        vector_beta_active = np.linalg.solve(
+            matrix_x_active.T @ matrix_x_active, matrix_x_active.T @ vector_y
+        )
         vector_beta[active_mask] = vector_beta_active
         vector_residual_active = vector_y - matrix_x_active @ vector_beta_active
         vector_x_transp_residual_active = matrix_x.T @ vector_residual_active
@@ -73,9 +76,11 @@ def lambda_max_sparse_group_lasso(
             vector_max_groups[i] = 0
         else:
             start, end = vector_index_start[i], vector_index_end[i] + 1
-            vector_temp = vector_x_transp_residual_active[start:end] / (n * vector_weights_features[start:end])
+            vector_temp = vector_x_transp_residual_active[start:end] / (
+                n * vector_weights_features[start:end]
+            )
             vector_temp_absolute = np.abs(vector_temp)
-            
+
             vector_temp = vector_x_transp_residual_active[start:end] / n
 
             left_border = 0
@@ -88,7 +93,7 @@ def lambda_max_sparse_group_lasso(
                 right_border,
                 vector_weights_groups[i],
                 vector_weights_features[start:end],
-                vector_temp
+                vector_temp,
             )
 
     # Determine lambda_max and perform numeric correction

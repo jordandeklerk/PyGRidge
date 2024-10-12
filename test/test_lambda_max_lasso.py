@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from ..src.lambda_max_lasso import lambda_max_lasso
 
+
 @pytest.fixture
 def sample_data():
     np.random.seed(42)
@@ -12,11 +13,13 @@ def sample_data():
     X = np.random.randn(n, p)
     return y, feature_weights, beta, X
 
+
 def test_lambda_max_lasso_output(sample_data):
     y, feature_weights, beta, X = sample_data
     result = lambda_max_lasso(y, feature_weights, beta, X)
     assert isinstance(result, float)
     assert result > 0
+
 
 def test_lambda_max_lasso_with_zero_weights(sample_data):
     y, feature_weights, beta, X = sample_data
@@ -24,6 +27,7 @@ def test_lambda_max_lasso_with_zero_weights(sample_data):
     result = lambda_max_lasso(y, feature_weights, beta, X)
     assert isinstance(result, float)
     assert result > 0
+
 
 def test_lambda_max_lasso_all_penalized():
     n, p = 50, 5
@@ -35,14 +39,16 @@ def test_lambda_max_lasso_all_penalized():
     assert isinstance(result, float)
     assert result > 0
 
+
 def test_lambda_max_lasso_dimension_mismatch():
     n, p = 50, 5
     y = np.random.randn(n)
     feature_weights = np.ones(p)
     beta = np.zeros(p)
-    X = np.random.randn(n, p+1)  # Mismatched dimension
+    X = np.random.randn(n, p + 1)  # Mismatched dimension
     with pytest.raises(ValueError):
         lambda_max_lasso(y, feature_weights, beta, X)
+
 
 def test_lambda_max_lasso_numeric_correction():
     n, p = 50, 5
