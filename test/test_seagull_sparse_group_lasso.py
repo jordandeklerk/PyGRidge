@@ -88,12 +88,16 @@ def test_seagull_sparse_group_lasso_alpha_extremes(sample_data):
     # Test with alpha close to 0 (more group lasso-like)
     sample_data["alpha"] = 0.01
     result_low_alpha = seagull_sparse_group_lasso(**sample_data)
-    assert result_low_alpha is not None, "seagull_sparse_group_lasso returned None for low alpha"
+    assert (
+        result_low_alpha is not None
+    ), "seagull_sparse_group_lasso returned None for low alpha"
 
     # Test with alpha close to 1 (more lasso-like)
     sample_data["alpha"] = 0.99
     result_high_alpha = seagull_sparse_group_lasso(**sample_data)
-    assert result_high_alpha is not None, "seagull_sparse_group_lasso returned None for high alpha"
+    assert (
+        result_high_alpha is not None
+    ), "seagull_sparse_group_lasso returned None for high alpha"
 
     assert not np.allclose(
         result_low_alpha["random_effects"], result_high_alpha["random_effects"]
