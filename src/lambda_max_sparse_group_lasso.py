@@ -1,3 +1,12 @@
+"""
+This module provides functionality to compute the maximum lambda value for sparse group lasso regularization.
+
+It contains a single function, lambda_max_sparse_group_lasso, which calculates the largest
+lambda value that results in a non-zero solution for the sparse group lasso problem. This is
+useful for setting up a regularization path or for determining an appropriate range
+of lambda values for cross-validation.
+"""
+
 import numpy as np
 from seagull_bisection import seagull_bisection
 
@@ -10,33 +19,40 @@ def lambda_max_sparse_group_lasso(
     vector_beta: np.ndarray,
     matrix_x: np.ndarray,
 ) -> float:
-    """
-    Maximal lambda
+    """Calculate the maximum value for the penalty parameter lambda in sparse group lasso.
 
-    This function calculates the maximum value for the penalty parameter lambda
-    for the sparse group lasso problem.
+    This function computes the maximum value for the penalty parameter lambda
+    in the sparse group lasso problem.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     alpha : float
-        Mixing parameter of the penalty terms. Satisfies: 0 < alpha < 1.
-        The penalty term looks as follows: alpha * "lasso penalty" + (1-alpha) * "group lasso penalty".
-    vector_y : np.ndarray
-        Numeric vector of observations.
-    vector_groups : np.ndarray
-        Integer vector specifying which effect (fixed and random) belongs to which group.
-    vector_weights_features : np.ndarray
-        Numeric vector of weights for the vectors of fixed and random effects [b^T, u^T]^T.
-    vector_beta : np.ndarray
-        Numeric vector of features. At the end of this function, the random effects are
-        initialized with zero, but the fixed effects are initialized via a least squares procedure.
-    matrix_x : np.ndarray
-        Numeric design matrix relating y to fixed and random effects [X Z].
+        Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
+        The penalty term is: alpha * "lasso penalty" + (1-alpha) * "group lasso penalty".
+    vector_y : ndarray of shape (n_samples,)
+        Vector of observations.
+    vector_groups : ndarray of shape (n_features,)
+        Integer vector specifying group membership for each effect (fixed and random).
+    vector_weights_features : ndarray of shape (n_features,)
+        Vector of weights for the fixed and random effects [b^T, u^T]^T.
+    vector_beta : ndarray of shape (n_features,)
+        Vector of features. Random effects are initialized to zero,
+        fixed effects are initialized via least squares.
+    matrix_x : ndarray of shape (n_samples, n_features)
+        Design matrix relating y to fixed and random effects [X Z].
 
-    Returns:
-    --------
+    Returns
+    -------
     float
         The maximum value for the penalty parameter lambda.
+
+    Notes
+    -----
+    The sparse group lasso penalty is a combination of the lasso and group lasso penalties:
+
+    P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+
+    where beta_j are individual coefficients and beta_g are groups of coefficients.
     """
     n, p = matrix_x.shape
     number_groups = np.max(vector_groups)

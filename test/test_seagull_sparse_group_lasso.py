@@ -34,6 +34,7 @@ def sample_data():
 
 def test_seagull_sparse_group_lasso_basic(sample_data):
     result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     assert isinstance(result, dict)
     assert "random_effects" in result
     assert "lambda" in result
@@ -42,6 +43,7 @@ def test_seagull_sparse_group_lasso_basic(sample_data):
 
 def test_seagull_sparse_group_lasso_dimensions(sample_data):
     result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     n, p = sample_data["X"].shape
     num_intervals = sample_data["num_intervals"]
     assert result["random_effects"].shape == (num_intervals, p)
@@ -52,6 +54,7 @@ def test_seagull_sparse_group_lasso_dimensions(sample_data):
 def test_seagull_sparse_group_lasso_fixed_effects(sample_data):
     sample_data["num_fixed_effects"] = 5
     result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     assert "fixed_effects" in result
     assert "random_effects" in result
     assert result["fixed_effects"].shape == (sample_data["num_intervals"], 5)
@@ -60,11 +63,13 @@ def test_seagull_sparse_group_lasso_fixed_effects(sample_data):
 
 def test_seagull_sparse_group_lasso_convergence(sample_data):
     result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     assert np.all(result["iterations"] <= sample_data["max_iterations"])
 
 
 def test_seagull_sparse_group_lasso_lambda_range(sample_data):
     result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     assert np.all(result["lambda"] <= sample_data["lambda_max"])
     assert np.all(
         result["lambda"] >= sample_data["lambda_max"] * sample_data["proportion_xi"]
@@ -73,7 +78,8 @@ def test_seagull_sparse_group_lasso_lambda_range(sample_data):
 
 def test_seagull_sparse_group_lasso_trace_progress(sample_data, capsys):
     sample_data["trace_progress"] = True
-    seagull_sparse_group_lasso(**sample_data)
+    result = seagull_sparse_group_lasso(**sample_data)
+    assert result is not None, "seagull_sparse_group_lasso returned None"
     captured = capsys.readouterr()
     assert "Loop: 10 of 10 finished" in captured.out
 
@@ -82,10 +88,12 @@ def test_seagull_sparse_group_lasso_alpha_extremes(sample_data):
     # Test with alpha close to 0 (more group lasso-like)
     sample_data["alpha"] = 0.01
     result_low_alpha = seagull_sparse_group_lasso(**sample_data)
+    assert result_low_alpha is not None, "seagull_sparse_group_lasso returned None for low alpha"
 
     # Test with alpha close to 1 (more lasso-like)
     sample_data["alpha"] = 0.99
     result_high_alpha = seagull_sparse_group_lasso(**sample_data)
+    assert result_high_alpha is not None, "seagull_sparse_group_lasso returned None for high alpha"
 
     assert not np.allclose(
         result_low_alpha["random_effects"], result_high_alpha["random_effects"]

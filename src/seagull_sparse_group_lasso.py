@@ -1,3 +1,17 @@
+"""
+This module implements the Sparse-Group LASSO algorithm using proximal gradient descent.
+
+The main function, seagull_sparse_group_lasso, solves the optimization problem:
+min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
+
+where P(beta) is the sparse-group lasso penalty:
+P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+
+The algorithm uses soft-thresholding for the LASSO penalty and group soft-thresholding 
+for the group LASSO penalty. It supports multiple lambda values for regularization path, 
+and handles both fixed and random effects in mixed models.
+"""
+
 import numpy as np
 from typing import List, Dict
 
@@ -19,28 +33,70 @@ def seagull_sparse_group_lasso(
     num_fixed_effects: int,
     trace_progress: bool,
 ) -> Dict:
-    """
-    Sparse-group lasso via proximal gradient descent.
+    """Sparse-group lasso via proximal gradient descent.
 
-    Parameters:
-    - y: Numeric vector of observations.
-    - X: Numeric design matrix relating y to fixed and random effects [X Z].
-    - feature_weights: Numeric vector of weights for the vectors of fixed and random effects.
-    - groups: Integer vector specifying which effect (fixed and random) belongs to which group.
-    - beta: Numeric vector whose partitions will be returned.
-    - index_permutation: Integer vector that contains information about the original order of the user's input.
-    - alpha: Mixing parameter of the penalty terms. Satisfies: 0 < alpha < 1.
-    - epsilon_convergence: Value for relative accuracy of the solution.
-    - max_iterations: Maximum number of iterations for each value of the penalty parameter λ.
-    - gamma: Multiplicative parameter to decrease the step size during backtracking line search.
-    - lambda_max: Maximum value for the penalty parameter.
-    - proportion_xi: Multiplicative parameter to determine the minimum value of λ for the grid search.
-    - num_intervals: Number of lambdas for the grid search.
-    - num_fixed_effects: Number of fixed effects present in the mixed model.
-    - trace_progress: If True, a message will occur on the screen after each finished loop of the λ grid.
+    This function implements the sparse-group lasso algorithm using proximal
+    gradient descent. It solves the optimization problem:
 
-    Returns:
-    A dictionary containing the results of the sparse-group lasso algorithm.
+    min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
+
+    where P(beta) is the sparse-group lasso penalty:
+
+    P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+
+    Parameters
+    ----------
+    y : ndarray of shape (n_samples,)
+        Vector of observations.
+    X : ndarray of shape (n_samples, n_features)
+        Design matrix relating y to fixed and random effects [X Z].
+    feature_weights : ndarray of shape (n_features,)
+        Weights for the vectors of fixed and random effects [b^T, u^T]^T.
+    groups : ndarray of shape (n_features,)
+        Integer vector specifying group membership for each effect (fixed and random).
+    beta : ndarray of shape (n_features,)
+        Initial guess for the coefficient vector.
+    index_permutation : ndarray of shape (n_features,)
+        Integer vector containing information about the original order of the user's input.
+    alpha : float
+        Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
+    epsilon_convergence : float
+        Relative accuracy of the solution.
+    max_iterations : int
+        Maximum number of iterations for each value of the penalty parameter lambda.
+    gamma : float
+        Multiplicative parameter to decrease the step size during backtracking line search.
+    lambda_max : float
+        Maximum value for the penalty parameter.
+    proportion_xi : float
+        Multiplicative parameter to determine the minimum value of lambda for the grid search.
+    num_intervals : int
+        Number of lambdas for the grid search.
+    num_fixed_effects : int
+        Number of fixed effects present in the mixed model.
+    trace_progress : bool
+        If True, print progress after each finished loop of the lambda grid.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the results of the sparse-group lasso algorithm.
+        Keys include:
+        - 'random_effects': ndarray of shape (num_intervals, n_features) or (num_intervals, n_features - num_fixed_effects)
+        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects) (only if num_fixed_effects > 0)
+        - 'lambda': ndarray of shape (num_intervals,)
+        - 'iterations': ndarray of shape (num_intervals,)
+        - 'alpha': float
+        - 'rel_acc': float
+        - 'max_iter': int
+        - 'gamma_bls': float
+        - 'xi': float
+        - 'loops_lambda': int
+
+    Notes
+    -----
+    The algorithm uses proximal gradient descent with soft-thresholding
+    for the lasso penalty and group soft-thresholding for the group lasso penalty.
     """
     n, p = X.shape
     num_groups = np.max(groups)

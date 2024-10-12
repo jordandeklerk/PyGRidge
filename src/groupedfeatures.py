@@ -6,13 +6,8 @@ with repeated measurements.
 
 The module provides:
 
-1. GroupedFeatures class:
-   - Represents collections of features organized into groups.
-   - Supports initialization with variable or uniform group sizes.
-   - Offers methods for group indexing, summarization, and expansion.
-
-2. Utility functions:
-   - fill: Creates lists filled with a specific value.
+- GroupedFeatures class: Represents collections of features organized into groups.
+- Utility functions: For creating filled lists.
 
 Main features:
 - Flexible group creation and manipulation.
@@ -20,7 +15,6 @@ Main features:
 - Support for both list and numpy.ndarray inputs.
 - Comprehensive error checking with informative messages.
 """
-
 
 from typing import List, Callable, Union, TypeVar
 import numpy as np
@@ -30,18 +24,33 @@ T = TypeVar("T")
 
 class GroupedFeatures:
     """
-    A class representing groups of features, wherein the first `ps[0]` features are one group,
-    the next `ps[1]` features are the second group and so forth.
+    A class representing groups of features.
+
+    The first `ps[0]` features are one group, the next `ps[1]` features are the second group and so forth.
+
+    Parameters
+    ----------
+    ps : list of int
+        List of positive integers representing the size of each group.
+
+    Attributes
+    ----------
+    ps : list of int
+        List of group sizes.
+    p : int
+        Total number of features.
+    num_groups : int
+        Number of groups.
+
+    Raises
+    ------
+    TypeError
+        If ps is not a list or contains non-integer elements.
+    ValueError
+        If any group size is not positive.
     """
 
     def __init__(self, ps: List[int]):
-        """
-        Initialize GroupedFeatures with a list of group sizes.
-
-        :param ps: List of positive integers representing the size of each group.
-        :raises TypeError: If ps is not a list or contains non-integer elements.
-        :raises ValueError: If any group size is not positive.
-        """
         if not isinstance(ps, list):
             raise TypeError(
                 f"ps must be a list of positive integers, got {type(ps).__name__}"
@@ -58,13 +67,26 @@ class GroupedFeatures:
     @classmethod
     def from_group_size(cls, group_size: int, num_groups: int):
         """
-        Create a GroupedFeatures instance with num_groups each of size group_size.
+        Create a GroupedFeatures instance with uniform group sizes.
 
-        :param group_size: Positive integer indicating the size of each group.
-        :param num_groups: Positive integer indicating the number of groups.
-        :return: GroupedFeatures instance.
-        :raises TypeError: If group_size or num_groups is not an integer.
-        :raises ValueError: If group_size or num_groups is not positive.
+        Parameters
+        ----------
+        group_size : int
+            Size of each group.
+        num_groups : int
+            Number of groups.
+
+        Returns
+        -------
+        GroupedFeatures
+            Instance with uniform group sizes.
+
+        Raises
+        ------
+        TypeError
+            If group_size or num_groups is not an integer.
+        ValueError
+            If group_size or num_groups is not positive.
         """
         if not isinstance(group_size, int):
             raise TypeError(
@@ -85,7 +107,10 @@ class GroupedFeatures:
         """
         Get the number of groups.
 
-        :return: Number of groups.
+        Returns
+        -------
+        int
+            Number of groups.
         """
         return self.num_groups
 
@@ -93,7 +118,10 @@ class GroupedFeatures:
         """
         Get the total number of features.
 
-        :return: Total number of features.
+        Returns
+        -------
+        int
+            Total number of features.
         """
         return self.p
 
@@ -101,10 +129,22 @@ class GroupedFeatures:
         """
         Get the range of feature indices for the i-th group.
 
-        :param i: Index of the group (0-based).
-        :return: range object representing the indices of the group.
-        :raises TypeError: If i is not an integer.
-        :raises IndexError: If i is out of range [0, num_groups -1].
+        Parameters
+        ----------
+        i : int
+            Index of the group (0-based).
+
+        Returns
+        -------
+        range
+            Range object representing the indices of the group.
+
+        Raises
+        ------
+        TypeError
+            If i is not an integer.
+        IndexError
+            If i is out of range [0, num_groups - 1].
         """
         if not isinstance(i, int):
             raise TypeError(f"Group index i must be an integer, got {type(i).__name__}")
@@ -125,11 +165,24 @@ class GroupedFeatures:
         """
         Apply a summary function to each group of features.
 
-        :param vec: List or ndarray of features, length must be equal to total number of features.
-        :param f: Callable that takes a list or ndarray of features and returns a summary value.
-        :return: List of summary values, one per group.
-        :raises TypeError: If vec is neither a list nor an ndarray, or if f is not callable.
-        :raises ValueError: If length of vec does not match total number of features.
+        Parameters
+        ----------
+        vec : array-like of shape (n_features,) or (n_samples, n_features)
+            List or ndarray of features.
+        f : callable
+            Function that takes a list or ndarray of features and returns a summary value.
+
+        Returns
+        -------
+        list
+            List of summary values, one per group.
+
+        Raises
+        ------
+        TypeError
+            If vec is neither a list nor an ndarray, or if f is not callable.
+        ValueError
+            If length of vec does not match total number of features.
         """
         if not callable(f):
             raise TypeError("f must be a callable function")
@@ -182,13 +235,25 @@ class GroupedFeatures:
         """
         Expand a vector or number to a list of features.
 
-        If vec_or_num is a number (int or float), replicate it across all features.
+        If vec_or_num is a number, replicate it across all features.
         If it is a list or ndarray, each element corresponds to a group and is replicated within the group.
 
-        :param vec_or_num: Either a single number or a list/ndarray with length equal to number of groups.
-        :return: Expanded list of features.
-        :raises TypeError: If vec_or_num is neither a number nor a list/ndarray.
-        :raises ValueError: If vec_or_num is a list/ndarray but its length does not match number of groups.
+        Parameters
+        ----------
+        vec_or_num : int, float, list or ndarray
+            Either a single number or a list/ndarray with length equal to number of groups.
+
+        Returns
+        -------
+        list
+            Expanded list of features.
+
+        Raises
+        ------
+        TypeError
+            If vec_or_num is neither a number nor a list/ndarray.
+        ValueError
+            If vec_or_num is a list/ndarray but its length does not match number of groups.
         """
         if isinstance(vec_or_num, (int, float)):
             return [vec_or_num] * self.p
@@ -218,11 +283,24 @@ def fill(value: T, length: int) -> List[T]:
     """
     Fill a list with a given value repeated length times.
 
-    :param value: Value to fill the list with.
-    :param length: Number of times to repeat the value.
-    :return: List containing the value repeated length times.
-    :raises TypeError: If length is not an integer.
-    :raises ValueError: If length is negative.
+    Parameters
+    ----------
+    value : T
+        Value to fill the list with.
+    length : int
+        Number of times to repeat the value.
+
+    Returns
+    -------
+    list
+        List containing the value repeated length times.
+
+    Raises
+    ------
+    TypeError
+        If length is not an integer.
+    ValueError
+        If length is negative.
     """
     if not isinstance(length, int):
         raise TypeError(f"length must be an integer, got {type(length).__name__}")

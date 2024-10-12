@@ -1,19 +1,52 @@
+"""
+This module provides functionality to compute the maximum lambda value for group lasso regularization.
+
+It contains a single function, lambda_max_group_lasso, which calculates the largest
+lambda value that results in a non-zero solution for the group lasso problem. This is
+useful for setting up a regularization path or for determining an appropriate range
+of lambda values for cross-validation.
+"""
+
 import numpy as np
 
 
 def lambda_max_group_lasso(y, groups, feature_weights, beta, X):
-    """
-    Maximal lambda for group lasso regularization.
+    """Compute the maximal lambda for group lasso regularization.
 
-    Parameters:
-    y (np.array): Numeric vector of observations.
-    groups (np.array): Integer vector specifying which effect (fixed and random) belongs to which group.
-    feature_weights (np.array): Numeric vector of weights for the vectors of fixed and random effects [b^T, u^T]^T.
-    beta (np.array): Numeric vector of features. At the end of this function, the random effects are initialized with zero, but the fixed effects are initialized via a least squares procedure.
-    X (np.array): Numeric design matrix relating y to fixed and random effects [X Z].
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target vector.
+    groups : array-like of shape (n_features,)
+        Integer vector specifying group membership for each feature.
+    feature_weights : array-like of shape (n_features,)
+        Weights for the feature vector [b^T, u^T]^T.
+    beta : array-like of shape (n_features,)
+        Feature vector. Random effects are initialized to zero,
+        fixed effects are initialized via least squares.
+    X : array-like of shape (n_samples, n_features)
+        Design matrix [X Z] relating y to fixed and random effects.
 
-    Returns:
-    float: The maximal lambda value.
+    Returns
+    -------
+    float
+        The maximal lambda value.
+
+    Notes
+    -----
+    Computes the maximal lambda value for group lasso regularization:
+    1. Initialize group-specific variables.
+    2. Handle unpenalized features if present.
+    3. Scale X.T * residuals in groups.
+    4. Determine lambda_max and apply numeric correction.
+
+    The formula for lambda_max is:
+
+    lambda_max = max_i (||X_i.T r||_2) / (n w_i sqrt(|G_i|))
+
+    where X_i is the design matrix for group i, r is the residual,
+    n is the number of samples, w_i is the weight for group i,
+    and |G_i| is the size of group i.
     """
     n, p = X.shape
     num_groups = np.max(groups)

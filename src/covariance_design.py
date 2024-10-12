@@ -38,16 +38,23 @@ class DiscreteNonParametric:
     """
     Represents a discrete non-parametric spectrum characterized by eigenvalues and their associated probabilities.
 
-    Parameters:
-        eigs (List[float]): A list of eigenvalues.
-        probs (List[float]): A list of probabilities corresponding to each eigenvalue.
+    Parameters
+    ----------
+    eigs : list of float
+        A list of eigenvalues.
+    probs : list of float
+        A list of probabilities corresponding to each eigenvalue.
 
-    Attributes:
-        eigs (np.ndarray): Numpy array of eigenvalues.
-        probs (np.ndarray): Numpy array of probabilities for each eigenvalue.
+    Attributes
+    ----------
+    eigs : numpy.ndarray
+        Numpy array of eigenvalues.
+    probs : numpy.ndarray
+        Numpy array of probabilities for each eigenvalue.
 
-    Example:
-        >>> spectrum = DiscreteNonParametric(eigs=[1.0, 2.0, 3.0], probs=[0.2, 0.3, 0.5])
+    Examples
+    --------
+    >>> spectrum = DiscreteNonParametric(eigs=[1.0, 2.0, 3.0], probs=[0.2, 0.3, 0.5])
     """
 
     def __init__(self, eigs: List[float], probs: List[float]):
@@ -83,15 +90,16 @@ class CovarianceDesign(ABC):
     - `nfeatures`: Obtain the number of features (dimensions) in the covariance matrix.
     - `spectrum`: Get the spectral representation of the covariance matrix.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Returns the covariance matrix Σ.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Constructs and returns the covariance matrix \Sigma.
 
-        nfeatures() -> int:
-            Returns the number of features (size of Σ).
+    nfeatures() -> int
+        Retrieves the number of features (dimensions) in the covariance matrix \Sigma.
 
-        spectrum() -> DiscreteNonParametric:
-            Returns the spectrum of Σ as a DiscreteNonParametric object.
+    spectrum() -> DiscreteNonParametric
+        Computes the spectral decomposition of the covariance matrix \Sigma.
     """
 
     def __init__(self):
@@ -100,30 +108,36 @@ class CovarianceDesign(ABC):
     @abstractmethod
     def get_Sigma(self) -> np.ndarray:
         """
-        Constructs and returns the covariance matrix Σ.
+        Constructs and returns the covariance matrix \Sigma.
 
-        Returns:
-            np.ndarray: The covariance matrix.
+        Returns
+        -------
+        numpy.ndarray
+            The covariance matrix.
         """
         pass
 
     @abstractmethod
     def nfeatures(self) -> int:
         """
-        Retrieves the number of features (dimensions) in the covariance matrix Σ.
+        Retrieves the number of features (dimensions) in the covariance matrix \Sigma.
 
-        Returns:
-            int: Number of features.
+        Returns
+        -------
+        int
+            Number of features.
         """
         pass
 
     @abstractmethod
     def spectrum(self) -> DiscreteNonParametric:
         """
-        Computes the spectral decomposition of the covariance matrix Σ.
+        Computes the spectral decomposition of the covariance matrix \Sigma.
 
-        Returns:
-            DiscreteNonParametric: Spectrum containing eigenvalues and their probabilities.
+        Returns
+        -------
+        DiscreteNonParametric
+            Spectrum containing eigenvalues and their probabilities.
         """
         pass
 
@@ -132,29 +146,36 @@ class AR1Design(CovarianceDesign):
     """
     Implements an AutoRegressive model of order 1 (AR(1)) for covariance matrix design.
 
-    In an AR(1) model, each element Σ_{i,j} of the covariance matrix Σ is defined as:
+    In an AR(1) model, each element \Sigma_{i,j} of the covariance matrix \Sigma is defined as:
 
-    Σ_{i,j} = ρ^{|i - j|}
+    \Sigma_{i,j} = \rho^{|i - j|}
 
-    where ρ is the correlation coefficient between adjacent features.
+    where \rho is the correlation coefficient between adjacent features.
 
-    Parameters:
-        p (int, optional): Number of features (dimensions). Must be set before generating Σ.
-        rho (float, default=0.7): The AR(1) parameter representing the correlation coefficient.
+    Parameters
+    ----------
+    p : int, optional
+        Number of features (dimensions). Must be set before generating \Sigma.
+    rho : float, default=0.7
+        The AR(1) parameter representing the correlation coefficient.
 
-    Attributes:
-        p (int): Number of features.
-        rho (float): AR(1) correlation coefficient.
+    Attributes
+    ----------
+    p : int
+        Number of features.
+    rho : float
+        AR(1) correlation coefficient.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Constructs the AR(1) covariance matrix Σ.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Constructs the AR(1) covariance matrix \Sigma.
 
-        nfeatures() -> int:
-            Returns the number of features p.
+    nfeatures() -> int
+        Returns the number of features p.
 
-        spectrum() -> DiscreteNonParametric:
-            Computes the eigenvalues of Σ and assigns equal probability to each.
+    spectrum() -> DiscreteNonParametric
+        Computes the eigenvalues of \Sigma and assigns equal probability to each.
     """
 
     def __init__(self, p: int = None, rho: float = 0.7):
@@ -186,7 +207,7 @@ class AR1Design(CovarianceDesign):
             raise RuntimeError(f"Failed to compute covariance matrix: {e}")
 
         if not np.allclose(Sigma, Sigma.T):
-            raise ValueError("Covariance matrix Σ must be symmetric.")
+            raise ValueError("Covariance matrix \Sigma must be symmetric.")
 
         return Sigma
 
@@ -205,7 +226,7 @@ class AR1Design(CovarianceDesign):
             raise RuntimeError(f"Eigenvalue computation failed: {e}")
 
         if eigs.size == 0:
-            raise ValueError("Covariance matrix Σ has no eigenvalues.")
+            raise ValueError("Covariance matrix \Sigma has no eigenvalues.")
 
         probs = fill(1.0 / len(eigs), len(eigs))
         if not np.isclose(np.sum(probs), 1.0):
@@ -221,15 +242,20 @@ class DiagonalCovarianceDesign(CovarianceDesign):
     Since diagonal covariance matrices have non-zero entries only on the diagonal, this class
     provides a common structure for such designs, managing the number of features.
 
-    Parameters:
-        p (int, optional): Number of features (dimensions). Must be set before generating Σ.
+    Parameters
+    ----------
+    p : int, optional
+        Number of features (dimensions). Must be set before generating \Sigma.
 
-    Attributes:
-        p (int): Number of features.
+    Attributes
+    ----------
+    p : int
+        Number of features.
 
-    Methods:
-        nfeatures() -> int:
-            Returns the number of features p.
+    Methods
+    -------
+    nfeatures() -> int
+        Returns the number of features p.
     """
 
     def __init__(self, p: int = None):
@@ -251,22 +277,27 @@ class DiagonalCovarianceDesign(CovarianceDesign):
 
 class IdentityCovarianceDesign(DiagonalCovarianceDesign):
     """
-    Constructs an identity covariance matrix Σ, where all diagonal entries are 1 and off-diagonal entries are 0.
+    Constructs an identity covariance matrix \Sigma, where all diagonal entries are 1 and off-diagonal entries are 0.
 
     The identity matrix represents uncorrelated features with unit variance.
 
-    Parameters:
-        p (int, optional): Number of features (dimensions). Must be set before generating Σ.
+    Parameters
+    ----------
+    p : int, optional
+        Number of features (dimensions). Must be set before generating \Sigma.
 
-    Attributes:
-        p (int): Number of features.
+    Attributes
+    ----------
+    p : int
+        Number of features.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Returns the identity matrix of size p × p.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Returns the identity matrix of size p × p.
 
-        spectrum() -> DiscreteNonParametric:
-            Returns a spectrum where all eigenvalues are 1 with equal probabilities.
+    spectrum() -> DiscreteNonParametric
+        Returns a spectrum where all eigenvalues are 1 with equal probabilities.
     """
 
     def __init__(self, p: int = None):
@@ -300,24 +331,31 @@ class IdentityCovarianceDesign(DiagonalCovarianceDesign):
 
 class UniformScalingCovarianceDesign(DiagonalCovarianceDesign):
     """
-    Constructs a diagonal covariance matrix Σ with uniform scaling on the diagonal.
+    Constructs a diagonal covariance matrix \Sigma with uniform scaling on the diagonal.
 
-    Each diagonal entry Σ_{i,i} is set to a constant scaling factor.
+    Each diagonal entry \Sigma_{i,i} is set to a constant scaling factor.
 
-    Parameters:
-        scaling (float, default=1.0): The scaling factor applied uniformly to all diagonal entries.
-        p (int, optional): Number of features (dimensions). Must be set before generating Σ.
+    Parameters
+    ----------
+    scaling : float, default=1.0
+        The scaling factor applied uniformly to all diagonal entries.
+    p : int, optional
+        Number of features (dimensions). Must be set before generating \Sigma.
 
-    Attributes:
-        scaling (float): Scaling factor for the diagonal entries.
-        p (int): Number of features.
+    Attributes
+    ----------
+    scaling : float
+        Scaling factor for the diagonal entries.
+    p : int
+        Number of features.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Returns a diagonal matrix with each diagonal entry equal to `scaling`.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Returns a diagonal matrix with each diagonal entry equal to `scaling`.
 
-        spectrum() -> DiscreteNonParametric:
-            Returns a spectrum where all eigenvalues are equal to `scaling` with equal probabilities.
+    spectrum() -> DiscreteNonParametric
+        Returns a spectrum where all eigenvalues are equal to `scaling` with equal probabilities.
     """
 
     def __init__(self, scaling: float = 1.0, p: int = None):
@@ -356,29 +394,36 @@ class UniformScalingCovarianceDesign(DiagonalCovarianceDesign):
 
 class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
     """
-    Constructs a diagonal covariance matrix Σ using exponential order statistics for the eigenvalues.
+    Constructs a diagonal covariance matrix \Sigma using exponential order statistics for the eigenvalues.
     The eigenvalues are generated based on the order statistics of exponential random variables with a specified rate.
 
     The i-th eigenvalue is computed as:
 
-    λ_i = (1 / rate) * log(1 / t_i)
+    \lambda_i = \frac{1}{\text{rate}} \log\left(\frac{1}{t_i}\right)
 
-    where t_i are uniformly spaced points in the interval (1 / (2p), 1 - 1 / (2p)).
+    where t_i are uniformly spaced points in the interval \left(\frac{1}{2p}, 1 - \frac{1}{2p}\right).
 
-    Parameters:
-        p (int, optional): Number of features (dimensions). Must be set before generating Σ.
-        rate (float, default=1.0): Rate parameter for the exponential distribution.
+    Parameters
+    ----------
+    p : int, optional
+        Number of features (dimensions). Must be set before generating \Sigma.
+    rate : float, default=1.0
+        Rate parameter for the exponential distribution.
 
-    Attributes:
-        rate (float): Rate parameter for generating eigenvalues.
-        p (int): Number of features.
+    Attributes
+    ----------
+    rate : float
+        Rate parameter for generating eigenvalues.
+    p : int
+        Number of features.
 
-    Methods:
-        spectrum() -> DiscreteNonParametric:
-            Generates the eigenvalues based on exponential order statistics and assigns equal probabilities.
+    Methods
+    -------
+    spectrum() -> DiscreteNonParametric
+        Generates the eigenvalues based on exponential order statistics and assigns equal probabilities.
 
-        get_Sigma() -> np.ndarray:
-            Returns a diagonal matrix with the generated eigenvalues.
+    get_Sigma() -> numpy.ndarray
+        Returns a diagonal matrix with the generated eigenvalues.
     """
 
     def __init__(self, p: int = None, rate: float = 1.0):
@@ -429,9 +474,9 @@ class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
             )
 
         if Sigma.shape[0] != Sigma.shape[1]:
-            raise ValueError("Covariance matrix Σ must be square.")
+            raise ValueError("Covariance matrix \Sigma must be square.")
         if not np.allclose(Sigma, Sigma.T):
-            raise ValueError("Covariance matrix Σ must be symmetric.")
+            raise ValueError("Covariance matrix \Sigma must be symmetric.")
 
         return Sigma
 
@@ -440,27 +485,32 @@ class BlockDiagonal:
     """
     Represents a block diagonal matrix composed of smaller square matrices (blocks).
 
-    The overall covariance matrix Σ is constructed by placing each block along the diagonal,
+    The overall covariance matrix \Sigma is constructed by placing each block along the diagonal,
     with all off-diagonal blocks being zero matrices.
 
-    For example, given blocks B_1, B_2, ..., B_k, the block diagonal matrix Σ is:
+    For example, given blocks B_1, B_2, \ldots, B_k, the block diagonal matrix \Sigma is:
 
-    Σ = [B_1   0   ...   0  ]
-        [0    B_2  ...   0  ]
-        [.     .   .     .  ]
-        [.     .    .    .  ]
-        [.     .     .   .  ]
-        [0     0   ...  B_k ]
+    \Sigma = \begin{bmatrix}
+    B_1 & 0 & \cdots & 0 \\
+    0 & B_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & B_k
+    \end{bmatrix}
 
-    Parameters:
-        blocks (List[np.ndarray]): A list of square numpy arrays to be placed on the diagonal.
+    Parameters
+    ----------
+    blocks : list of numpy.ndarray
+        A list of square numpy arrays to be placed on the diagonal.
 
-    Attributes:
-        blocks (List[np.ndarray]): List of block matrices.
+    Attributes
+    ----------
+    blocks : list of numpy.ndarray
+        List of block matrices.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Constructs and returns the block diagonal matrix Σ.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Constructs and returns the block diagonal matrix \Sigma.
     """
 
     def __init__(self, blocks: List[np.ndarray]):
@@ -484,9 +534,9 @@ class BlockDiagonal:
             raise RuntimeError(f"Failed to construct block diagonal matrix: {e}")
 
         if Sigma.size == 0:
-            raise ValueError("Resulting covariance matrix Σ is empty.")
+            raise ValueError("Resulting covariance matrix \Sigma is empty.")
         if not np.allclose(Sigma, Sigma.T):
-            raise ValueError("Covariance matrix Σ must be symmetric.")
+            raise ValueError("Covariance matrix \Sigma must be symmetric.")
 
         return Sigma
 
@@ -497,20 +547,25 @@ def block_diag(*arrs):
 
     If no arrays are provided, returns an empty 2D array.
 
-    Parameters:
-        *arrs (np.ndarray): Variable number of square 2D numpy arrays to be placed on the diagonal.
+    Parameters
+    ----------
+    *arrs : numpy.ndarray
+        Variable number of square 2D numpy arrays to be placed on the diagonal.
 
-    Returns:
-        np.ndarray: The resulting block diagonal matrix.
+    Returns
+    -------
+    numpy.ndarray
+        The resulting block diagonal matrix.
 
-    Example:
-        >>> A = np.array([[1, 0], [0, 1]])
-        >>> B = np.array([[2, 0], [0, 2]])
-        >>> block_diag(A, B)
-        array([[1, 0, 0, 0],
-               [0, 1, 0, 0],
-               [0, 0, 2, 0],
-               [0, 0, 0, 2]])
+    Examples
+    --------
+    >>> A = np.array([[1, 0], [0, 1]])
+    >>> B = np.array([[2, 0], [0, 2]])
+    >>> block_diag(A, B)
+    array([[1, 0, 0, 0],
+           [0, 1, 0, 0],
+           [0, 0, 2, 0],
+           [0, 0, 0, 2]])
     """
     if not all(isinstance(a, np.ndarray) for a in arrs):
         raise TypeError("All arguments must be numpy.ndarray instances.")
@@ -541,24 +596,31 @@ class MixtureModel:
     """
     Represents a mixture model consisting of multiple spectra, each weighted by a mixing proportion.
 
-    The mixture model Σ is defined as:
+    The mixture model \Sigma is defined as:
 
-    Σ = Σ_{i=1}^k π_i * Σ_i
+    \Sigma = \sum_{i=1}^{k} \pi_i \Sigma_i
 
-    where Σ_i are individual covariance matrices (spectra) and π_i are their corresponding mixing proportions.
+    where \Sigma_i are individual covariance matrices (spectra) and \pi_i are their corresponding mixing proportions.
 
-    Parameters:
-        spectra (List[DiscreteNonParametric]): A list of spectra that comprise the mixture.
-        mixing_prop (List[float]): A list of mixing proportions corresponding to each spectrum.
+    Parameters
+    ----------
+    spectra : list of DiscreteNonParametric
+        A list of spectra that comprise the mixture.
+    mixing_prop : list of float
+        A list of mixing proportions corresponding to each spectrum.
 
-    Attributes:
-        spectra (List[DiscreteNonParametric]): List of component spectra.
-        mixing_prop (List[float]): Mixing proportions for each spectrum.
+    Attributes
+    ----------
+    spectra : list of DiscreteNonParametric
+        List of component spectra.
+    mixing_prop : list of float
+        Mixing proportions for each spectrum.
 
-    Example:
-        >>> spectrum1 = DiscreteNonParametric(eigs=[1, 2], probs=[0.5, 0.5])
-        >>> spectrum2 = DiscreteNonParametric(eigs=[3, 4], probs=[0.3, 0.7])
-        >>> mixture = MixtureModel(spectra=[spectrum1, spectrum2], mixing_prop=[0.6, 0.4])
+    Examples
+    --------
+    >>> spectrum1 = DiscreteNonParametric(eigs=[1, 2], probs=[0.5, 0.5])
+    >>> spectrum2 = DiscreteNonParametric(eigs=[3, 4], probs=[0.3, 0.7])
+    >>> mixture = MixtureModel(spectra=[spectrum1, spectrum2], mixing_prop=[0.6, 0.4])
     """
 
     def __init__(self, spectra: List[DiscreteNonParametric], mixing_prop: List[float]):
@@ -600,25 +662,32 @@ class BlockCovarianceDesign(CovarianceDesign):
     Each block within the block diagonal structure can have its own covariance characteristics,
     allowing for complex covariance structures composed of simpler sub-components.
 
-    Parameters:
-        blocks (List[CovarianceDesign]): A list of covariance design instances, each representing a block.
-        groups (GroupedFeatures, optional): An instance specifying feature groupings. If provided,
-            it adjusts the mixing proportions based on group sizes.
+    Parameters
+    ----------
+    blocks : list of CovarianceDesign
+        A list of covariance design instances, each representing a block.
+    groups : GroupedFeatures, optional
+        An instance specifying feature groupings. If provided,
+        it adjusts the mixing proportions based on group sizes.
 
-    Attributes:
-        blocks (List[CovarianceDesign]): List of covariance designs for each block.
-        groups (GroupedFeatures, optional): Feature groupings affecting mixing proportions.
+    Attributes
+    ----------
+    blocks : list of CovarianceDesign
+        List of covariance designs for each block.
+    groups : GroupedFeatures, optional
+        Feature groupings affecting mixing proportions.
 
-    Methods:
-        get_Sigma() -> np.ndarray:
-            Constructs and returns the block diagonal covariance matrix Σ.
+    Methods
+    -------
+    get_Sigma() -> numpy.ndarray
+        Constructs and returns the block diagonal covariance matrix \Sigma.
 
-        nfeatures() -> int:
-            Returns the total number of features across all blocks.
+    nfeatures() -> int
+        Returns the total number of features across all blocks.
 
-        spectrum() -> MixtureModel:
-            Combines the spectra of all blocks into a single mixture model, adjusting mixing proportions
-            based on group sizes if `groups` is provided.
+    spectrum() -> MixtureModel
+        Combines the spectra of all blocks into a single mixture model, adjusting mixing proportions
+        based on group sizes if `groups` is provided.
     """
 
     def __init__(self, blocks: List[CovarianceDesign], groups: GroupedFeatures = None):
@@ -664,9 +733,9 @@ class BlockCovarianceDesign(CovarianceDesign):
             )
 
         if Sigma.size == 0:
-            raise ValueError("Resulting covariance matrix Σ is empty.")
+            raise ValueError("Resulting covariance matrix \Sigma is empty.")
         if not np.allclose(Sigma, Sigma.T):
-            raise ValueError("Covariance matrix Σ must be symmetric.")
+            raise ValueError("Covariance matrix \Sigma must be symmetric.")
 
         return Sigma
 
@@ -725,31 +794,41 @@ def simulate_rotated_design(
     """
     Simulates a rotated design matrix based on the provided covariance design.
 
-    The simulation generates `n` samples from a multivariate distribution with covariance matrix Σ
+    The simulation generates n samples from a multivariate distribution with covariance matrix \Sigma
     specified by the `CovarianceDesign` instance. The rotation is achieved using the Cholesky decomposition
-    of Σ, i.e., Σ = LL^T, where L is a lower triangular matrix.
+    of \Sigma, i.e., \Sigma = LL^T, where L is a lower triangular matrix.
 
     The simulated design matrix X is computed as:
 
     X = ZL
 
-    where Z is an n × p matrix with independent entries generated by `rotated_measure`.
+    where Z is an n \times p matrix with independent entries generated by `rotated_measure`.
 
-    Parameters:
-        cov (CovarianceDesign): An instance of CovarianceDesign defining Σ.
-        n (int): Number of samples to generate.
-        rotated_measure (Callable, optional): A callable that generates random samples. Defaults to `np.random.normal`.
+    Parameters
+    ----------
+    cov : CovarianceDesign
+        An instance of CovarianceDesign defining \( \Sigma \).
+    n : int
+        Number of samples to generate.
+    rotated_measure : Callable, optional
+        A callable that generates random samples. Defaults to `numpy.random.normal`.
 
-    Returns:
-        np.ndarray: An n × p simulated design matrix adhering to the covariance structure Σ.
+    Returns
+    -------
+    numpy.ndarray
+        An \( n \times p \) simulated design matrix adhering to the covariance structure \( \Sigma \).
 
-    Raises:
-        ValueError: If Σ is not positive definite, making the Cholesky decomposition impossible.
-        TypeError: If input types are incorrect.
+    Raises
+    ------
+    ValueError
+        If \( \Sigma \) is not positive definite, making the Cholesky decomposition impossible.
+    TypeError
+        If input types are incorrect.
 
-    Example:
-        >>> ar1 = AR1Design(p=5, rho=0.7)
-        >>> X = simulate_rotated_design(ar1, n=100)
+    Examples
+    --------
+    >>> ar1 = AR1Design(p=5, rho=0.7)
+    >>> X = simulate_rotated_design(ar1, n=100)
     """
     if not isinstance(cov, CovarianceDesign):
         raise TypeError(
@@ -767,13 +846,15 @@ def simulate_rotated_design(
 
     Sigma = cov.get_Sigma()
     if not isinstance(Sigma, np.ndarray):
-        raise TypeError("Covariance matrix Σ must be a numpy.ndarray.")
+        raise TypeError("Covariance matrix \( \Sigma \) must be a numpy.ndarray.")
     if Sigma.ndim != 2:
-        raise ValueError("Covariance matrix Σ must be 2-dimensional.")
+        raise ValueError("Covariance matrix \( \Sigma \) must be 2-dimensional.")
     if Sigma.shape[0] != Sigma.shape[1]:
-        raise ValueError("Covariance matrix Σ must be square.")
+        raise ValueError("Covariance matrix \( \Sigma \) must be square.")
     if np.any(np.isnan(Sigma)) or np.any(np.isinf(Sigma)):
-        raise ValueError("Covariance matrix Σ contains NaN or infinite values.")
+        raise ValueError(
+            "Covariance matrix \( \Sigma \) contains NaN or infinite values."
+        )
 
     try:
         Sigma_chol = np.linalg.cholesky(Sigma)
@@ -823,18 +904,25 @@ def set_groups(design: CovarianceDesign, groups_or_p: Union[GroupedFeatures, int
     or as a `GroupedFeatures` instance that specifies groupings within the features. When provided
     with group information, the covariance design adjusts its internal structure to accommodate the groups.
 
-    Parameters:
-        design (CovarianceDesign): An instance of CovarianceDesign to configure.
-        groups_or_p (GroupedFeatures or int): Either an integer specifying the total number of features
-            or a `GroupedFeatures` instance defining feature groupings.
+    Parameters
+    ----------
+    design : CovarianceDesign
+        An instance of CovarianceDesign to configure.
+    groups_or_p : GroupedFeatures or int
+        Either an integer specifying the total number of features
+        or a `GroupedFeatures` instance defining feature groupings.
 
-    Raises:
-        TypeError: If `groups_or_p` is neither an instance of `GroupedFeatures` nor an integer.
-        ValueError: If group sizes are inconsistent with the number of blocks in `BlockCovarianceDesign`.
+    Raises
+    ------
+    TypeError
+        If `groups_or_p` is neither an instance of `GroupedFeatures` nor an integer.
+    ValueError
+        If group sizes are inconsistent with the number of blocks in `BlockCovarianceDesign`.
 
-    Example:
-        >>> groups = GroupedFeatures(ps=[2, 3])
-        >>> set_groups(design, groups)
+    Examples
+    --------
+    >>> groups = GroupedFeatures(ps=[2, 3])
+    >>> set_groups(design, groups)
     """
     if not isinstance(design, CovarianceDesign):
         raise TypeError(

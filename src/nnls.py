@@ -68,33 +68,37 @@ def nonneg_lsq(
     **kwargs,
 ) -> np.ndarray:
     """
-    Solves the non-negative least squares problem.
+    Solve the non-negative least squares problem.
 
-    Parameters:
+    Solves the problem:
+
+    minimize ||A X - B||_2^2 subject to X >= 0
+
+    Parameters
     ----------
-    A : np.ndarray
+    A : array-like of shape (n_samples, n_features)
         The input matrix A.
-    B : np.ndarray
+    B : array-like of shape (n_samples,) or (n_samples, n_targets)
         The target matrix B. If B is a vector, it will be converted to a column matrix.
-    alg : str, optional
-        The algorithm to use. Currently supports 'fnnls'. Default is 'fnnls'.
-    gram : bool, optional
-        If True, A and B are treated as Gram matrices (AtA and AtB). Default is False.
-    use_parallel : bool, optional
-        If True and multiple CPUs are available, computations for multiple columns of B are parallelized. Default is False.
-    tol : float, optional
-        Tolerance for non-negativity constraints. Default is 1e-8.
+    alg : {'fnnls'}, default='fnnls'
+        The algorithm to use. Currently only supports 'fnnls'.
+    gram : bool, default=False
+        If True, A and B are treated as Gram matrices (A^T A and A^T B).
+    use_parallel : bool, default=False
+        If True and multiple CPUs are available, computations for multiple columns of B are parallelized.
+    tol : float, default=1e-8
+        Tolerance for non-negativity constraints.
     max_iter : int, optional
-        Maximum number of iterations. If None, set to 30 * number of columns in AtA.
-    **kwargs
+        Maximum number of iterations. If None, set to 30 * number of columns in A^T A.
+    **kwargs : dict
         Additional keyword arguments passed to the underlying algorithm.
 
-    Returns:
+    Returns
     -------
-    np.ndarray
-        Solution matrix X that minimizes ||A*X - B||_2 subject to X >= 0.
+    X : ndarray of shape (n_features, n_targets)
+        Solution matrix X that minimizes ||A X - B||_2 subject to X >= 0.
 
-    Raises:
+    Raises
     ------
     InvalidInputError
         If the input matrices are invalid or incompatible.
@@ -149,31 +153,31 @@ def fnnls(
     **kwargs,
 ) -> np.ndarray:
     """
-    Solves the non-negative least squares problem using the FNNLS algorithm.
+    Solve the non-negative least squares problem using the FNNLS algorithm.
 
-    Parameters:
+    Parameters
     ----------
-    A : np.ndarray
-        The input matrix A or Gram matrix AtA if gram=True.
-    B : np.ndarray
-        The target matrix B or AtB if gram=True. If B is a vector, it will be converted to a column matrix.
-    gram : bool, optional
-        If True, A and B are treated as Gram matrices (AtA and AtB). Default is False.
-    use_parallel : bool, optional
-        If True and multiple CPUs are available, computations for multiple columns of B are parallelized. Default is False.
-    tol : float, optional
-        Tolerance for non-negativity constraints. Default is 1e-8.
+    A : array-like of shape (n_samples, n_features)
+        The input matrix A or Gram matrix A^T A if gram=True.
+    B : array-like of shape (n_samples,) or (n_samples, n_targets)
+        The target matrix B or A^T B if gram=True. If B is a vector, it will be converted to a column matrix.
+    gram : bool, default=False
+        If True, A and B are treated as Gram matrices (A^T A and A^T B).
+    use_parallel : bool, default=False
+        If True and multiple CPUs are available, computations for multiple columns of B are parallelized.
+    tol : float, default=1e-8
+        Tolerance for non-negativity constraints.
     max_iter : int, optional
         Maximum number of iterations. If None, set to 30 * number of variables.
-    **kwargs
+    **kwargs : dict
         Additional keyword arguments passed to the core FNNLS algorithm.
 
-    Returns:
+    Returns
     -------
-    np.ndarray
-        Solution matrix X that minimizes ||A*X - B||_2 subject to X >= 0.
+    X : ndarray of shape (n_features, n_targets)
+        Solution matrix X that minimizes ||A X - B||_2 subject to X >= 0.
 
-    Raises:
+    Raises
     ------
     InvalidInputError
         If the input matrices are invalid or incompatible.
@@ -217,25 +221,25 @@ def fnnls_core(
     """
     Core FNNLS algorithm to solve a single non-negative least squares problem.
 
-    Parameters:
+    Parameters
     ----------
-    AtA : np.ndarray
-        The Gram matrix A.T @ A.
-    Atb : np.ndarray
-        The product A.T @ b.
-    tol : float, optional
-        Tolerance for non-negativity constraints. Default is 1e-8.
-    max_iter : int, optional
-        Maximum number of iterations. Default is 300.
-    **kwargs
+    AtA : array-like of shape (n_features, n_features)
+        The Gram matrix A^T A.
+    Atb : array-like of shape (n_features,)
+        The product A^T b.
+    tol : float, default=1e-8
+        Tolerance for non-negativity constraints.
+    max_iter : int, default=300
+        Maximum number of iterations.
+    **kwargs : dict
         Additional keyword arguments (currently unused).
 
-    Returns:
+    Returns
     -------
-    np.ndarray
-        Solution vector x that minimizes ||A*x - b||_2 subject to x >= 0.
+    x : ndarray of shape (n_features,)
+        Solution vector x that minimizes ||A x - b||_2 subject to x >= 0.
 
-    Raises:
+    Raises
     ------
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.

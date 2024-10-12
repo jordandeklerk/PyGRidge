@@ -1,3 +1,10 @@
+"""
+This module implements the seagull group lasso algorithm for solving Lasso, group lasso, and sparse-group lasso problems.
+
+It provides a single function, seagull_group_lasso, which performs the optimization using coordinate descent with soft-thresholding.
+The algorithm supports various penalty terms and can handle fixed and random effects in mixed models.
+"""
+
 import numpy as np
 
 
@@ -17,27 +24,70 @@ def seagull_group_lasso(
     num_fixed_effects: int,
     trace_progress: bool,
 ) -> dict:
-    """
-    Lasso, group lasso, and sparse-group lasso
+    """Perform Lasso, group lasso, and sparse-group lasso regression.
 
-    Parameters:
-    y (np.ndarray): Numeric vector of observations.
-    X (np.ndarray): Numeric design matrix relating y to fixed and random effects [X Z].
-    feature_weights (np.ndarray): Numeric vector of weights for the vectors of fixed and random effects [b^T, u^T]^T.
-    groups (np.ndarray): Integer vector specifying which effect (fixed and random) belongs to which group.
-    beta (np.ndarray): Numeric vector whose partitions will be returned.
-    index_permutation (np.ndarray): Integer vector that contains information about the original order of the user's input.
-    epsilon_convergence (float): Value for relative accuracy of the solution.
-    max_iterations (int): Maximum number of iterations for each value of the penalty parameter λ.
-    gamma (float): Multiplicative parameter to decrease the step size during backtracking line search.
-    lambda_max (float): Maximum value for the penalty parameter.
-    proportion_xi (float): Multiplicative parameter to determine the minimum value of λ for the grid search.
-    num_intervals (int): Number of lambdas for the grid search.
-    num_fixed_effects (int): Number of fixed effects present in the mixed model.
-    trace_progress (bool): If True, a message will occur on the screen after each finished loop of the λ grid.
+    This function implements the seagull group lasso algorithm for solving
+    Lasso, group lasso, and sparse-group lasso problems.
 
-    Returns:
-    dict: A dictionary containing the results of the group lasso algorithm.
+    Parameters
+    ----------
+    y : ndarray of shape (n_samples,)
+        Numeric vector of observations.
+    X : ndarray of shape (n_samples, n_features)
+        Numeric design matrix relating y to fixed and random effects [X Z].
+    feature_weights : ndarray of shape (n_features,)
+        Numeric vector of weights for the vectors of fixed and random effects [b^T, u^T]^T.
+    groups : ndarray of shape (n_features,)
+        Integer vector specifying which effect (fixed and random) belongs to which group.
+    beta : ndarray of shape (n_features,)
+        Numeric vector whose partitions will be returned.
+    index_permutation : ndarray of shape (n_features,)
+        Integer vector that contains information about the original order of the user's input.
+    epsilon_convergence : float
+        Value for relative accuracy of the solution.
+    max_iterations : int
+        Maximum number of iterations for each value of the penalty parameter λ.
+    gamma : float
+        Multiplicative parameter to decrease the step size during backtracking line search.
+    lambda_max : float
+        Maximum value for the penalty parameter.
+    proportion_xi : float
+        Multiplicative parameter to determine the minimum value of λ for the grid search.
+    num_intervals : int
+        Number of lambdas for the grid search.
+    num_fixed_effects : int
+        Number of fixed effects present in the mixed model.
+    trace_progress : bool
+        If True, a message will occur on the screen after each finished loop of the λ grid.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the results of the group lasso algorithm.
+        Keys include:
+        - 'random_effects': ndarray of shape (num_intervals, n_features) or (num_intervals, n_features - num_fixed_effects)
+        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects) (only if num_fixed_effects > 0)
+        - 'lambda': ndarray of shape (num_intervals,)
+        - 'iterations': ndarray of shape (num_intervals,)
+        - 'rel_acc': float
+        - 'max_iter': int
+        - 'gamma_bls': float
+        - 'xi': float
+        - 'loops_lambda': int
+
+    Notes
+    -----
+    The algorithm solves the optimization problem:
+
+    min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
+
+    where P(beta) is the penalty term, which can be:
+    - Lasso: sum_j |beta_j|
+    - Group Lasso: sum_g ||beta_g||_2
+    - Sparse Group Lasso: alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+
+    The algorithm uses a coordinate descent approach with soft-thresholding
+    for the Lasso penalty and group soft-thresholding for the Group Lasso penalty.
     """
     n, p = X.shape
 
