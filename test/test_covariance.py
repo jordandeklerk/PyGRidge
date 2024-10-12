@@ -601,6 +601,7 @@ def test_simulate_rotated_design_invalid_Sigma_shape():
 
 def test_simulate_rotated_design_rotated_measure_output_invalid():
     """Test TypeError for invalid output from rotated measure in simulate_rotated_design."""
+
     def faulty_measure(size):
         return "not_an_array"
 
@@ -611,6 +612,7 @@ def test_simulate_rotated_design_rotated_measure_output_invalid():
 
 def test_simulate_rotated_design_rotated_measure_shape_mismatch():
     """Test ValueError for shape mismatch in rotated measure output in simulate_rotated_design."""
+
     def faulty_measure(size):
         return np.random.normal(size=(size[0], size[1] + 1))  # Incorrect shape
 

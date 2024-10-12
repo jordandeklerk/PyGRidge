@@ -231,9 +231,6 @@ class TestGroupedFeatures:
             fill(value, length)
 
 
-# Additional tests for edge cases
-
-
 class TestGroupedFeaturesEdgeCases:
     def test_empty_groups(self):
         """Test behavior with empty group sizes."""
