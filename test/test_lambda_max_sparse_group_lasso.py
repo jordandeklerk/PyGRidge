@@ -4,6 +4,7 @@ from ..src.lambda_max_sparse_group_lasso import lambda_max_sparse_group_lasso
 
 
 def test_lambda_max_sparse_group_lasso_basic():
+    """Test basic functionality of lambda_max_sparse_group_lasso."""
     n, p = 100, 10
     alpha = 0.5
     vector_y = np.random.randn(n)
@@ -19,6 +20,7 @@ def test_lambda_max_sparse_group_lasso_basic():
 
 
 def test_lambda_max_sparse_group_lasso_unpenalized_features():
+    """Test lambda_max_sparse_group_lasso with unpenalized features."""
     n, p = 100, 10
     alpha = 0.5
     vector_y = np.random.randn(n)
@@ -36,6 +38,7 @@ def test_lambda_max_sparse_group_lasso_unpenalized_features():
 
 
 def test_lambda_max_sparse_group_lasso_edge_cases():
+    """Test lambda_max_sparse_group_lasso with edge case alpha values."""
     n, p = 100, 10
     vector_y = np.random.randn(n)
     vector_groups = np.repeat(np.arange(1, 6), 2)
@@ -67,6 +70,7 @@ def test_lambda_max_sparse_group_lasso_edge_cases():
 
 
 def test_lambda_max_sparse_group_lasso_different_group_sizes():
+    """Test lambda_max_sparse_group_lasso with varying group sizes."""
     n, p = 100, 15
     alpha = 0.5
     vector_y = np.random.randn(n)
@@ -82,6 +86,7 @@ def test_lambda_max_sparse_group_lasso_different_group_sizes():
 
 
 def test_lambda_max_sparse_group_lasso_zero_weight_group():
+    """Test lambda_max_sparse_group_lasso with a group of zero weights."""
     n, p = 100, 10
     alpha = 0.5
     vector_y = np.random.randn(n)

@@ -1,10 +1,11 @@
 """
-This module provides functionality to compute the maximum lambda value for group lasso regularization.
+This module provides functionality to compute the maximum lambda value for group
+lasso regularization.
 
-It contains a single function, lambda_max_group_lasso, which calculates the largest
-lambda value that results in a non-zero solution for the group lasso problem. This is
-useful for setting up a regularization path or for determining an appropriate range
-of lambda values for cross-validation.
+It contains a single function, lambda_max_group_lasso, which calculates the
+largest lambda value that results in a non-zero solution for the group lasso
+problem. This is useful for setting up a regularization path or for determining
+an appropriate range of lambda values for cross-validation.
 """
 
 import numpy as np

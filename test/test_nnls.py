@@ -16,6 +16,7 @@ from ..src.nnls import (
 
 @pytest.fixture
 def simple_A_B():
+    """Fixture providing a simple A and B for testing."""
     A = np.array([[1, 2], [3, 4], [5, 6]], dtype=float)
     B = np.array([7, 8, 9], dtype=float)
     return A, B
@@ -23,6 +24,7 @@ def simple_A_B():
 
 @pytest.fixture
 def random_A_B():
+    """Fixture providing random A and B matrices for testing."""
     np.random.seed(0)
     A = np.random.rand(1000, 500)
     X_true = np.abs(np.random.randn(500, 3))  # Ensure non-negative
@@ -31,6 +33,7 @@ def random_A_B():
 
 
 def test_nonneg_lsq_basic(simple_A_B):
+    """Test basic functionality of nonneg_lsq."""
     A, B = simple_A_B
     X = nonneg_lsq(A, B, alg="fnnls")
     assert X.shape == (A.shape[1],), "Solution shape mismatch."
@@ -38,6 +41,7 @@ def test_nonneg_lsq_basic(simple_A_B):
 
 
 def test_nonneg_lsq_multiple_rhs(random_A_B):
+    """Test nonneg_lsq with multiple right-hand sides."""
     A, B = random_A_B
     X = nonneg_lsq(A, B, alg="fnnls")
     assert X.shape == (
@@ -48,6 +52,7 @@ def test_nonneg_lsq_multiple_rhs(random_A_B):
 
 
 def test_nonneg_lsq_correctness(simple_A_B):
+    """Test correctness of nonneg_lsq against SciPy's nnls."""
     A, B = simple_A_B
     X = nonneg_lsq(A, B, alg="fnnls")
     residual = np.linalg.norm(A @ X - B)
@@ -59,6 +64,7 @@ def test_nonneg_lsq_correctness(simple_A_B):
 
 
 def test_nonneg_lsq_scipy_comparison(random_A_B):
+    """Compare nonneg_lsq results with SciPy's nnls for multiple RHS."""
     A, B = random_A_B
     X = nonneg_lsq(A, B, alg="fnnls")
     for i in range(B.shape[1]):
@@ -69,6 +75,7 @@ def test_nonneg_lsq_scipy_comparison(random_A_B):
 
 
 def test_nonneg_lsq_gram_matrix(random_A_B):
+    """Test nonneg_lsq using the Gram matrix."""
     A, B = random_A_B
     AtA = A.T @ A
     AtB = A.T @ B
@@ -81,6 +88,7 @@ def test_nonneg_lsq_gram_matrix(random_A_B):
 
 
 def test_nonneg_lsq_parallel():
+    """Test nonneg_lsq with parallel execution."""
     np.random.seed(0)
     A = np.random.rand(1000, 500)
     X_true = np.abs(np.random.randn(500, 10))
@@ -104,6 +112,7 @@ def test_nonneg_lsq_parallel():
 
 
 def test_nonneg_lsq_invalid_algorithm(simple_A_B):
+    """Test nonneg_lsq with an invalid algorithm."""
     A, B = simple_A_B
     with pytest.raises(
         ValueError, match="Specified algorithm 'invalid_alg' not recognized."
@@ -112,6 +121,7 @@ def test_nonneg_lsq_invalid_algorithm(simple_A_B):
 
 
 def test_nonneg_lsq_zero_matrix():
+    """Test nonneg_lsq with zero matrices."""
     A = np.zeros((5, 3))
     B = np.zeros(5)
     X = nonneg_lsq(A, B, alg="fnnls")
@@ -119,6 +129,7 @@ def test_nonneg_lsq_zero_matrix():
 
 
 def test_nonneg_lsq_empty_matrix():
+    """Test nonneg_lsq with empty matrices."""
     A = np.empty((0, 0))
     B = np.empty((0,))
     with pytest.raises(
@@ -128,6 +139,7 @@ def test_nonneg_lsq_empty_matrix():
 
 
 def test_nonneg_lsq_incompatible_shapes():
+    """Test nonneg_lsq with incompatible shapes for A and B."""
     A = np.random.rand(5, 3)
     B = np.random.rand(4)
     with pytest.raises(InvalidInputError, match="Incompatible shapes:"):
@@ -135,6 +147,7 @@ def test_nonneg_lsq_incompatible_shapes():
 
 
 def test_nonneg_lsq_gram_incompatible_shapes():
+    """Test nonneg_lsq with incompatible shapes when gram=True."""
     A = np.random.rand(5, 3)
     B = np.random.rand(4)
     with pytest.raises(
@@ -144,6 +157,7 @@ def test_nonneg_lsq_gram_incompatible_shapes():
 
 
 def test_nonneg_lsq_non_square_gram():
+    """Test nonneg_lsq with non-square A when gram=True."""
     A = np.random.rand(5, 3)
     B = np.random.rand(5)
     with pytest.raises(
@@ -153,6 +167,7 @@ def test_nonneg_lsq_non_square_gram():
 
 
 def test_nonneg_lsq_single_variable():
+    """Test nonneg_lsq with a single variable."""
     A = np.array([[1], [2], [3]], dtype=float)
     B = np.array([1, 2, 3], dtype=float)
     X = nonneg_lsq(A, B, alg="fnnls")
@@ -163,6 +178,7 @@ def test_nonneg_lsq_single_variable():
 
 
 def test_nonneg_lsq_large_problem():
+    """Test nonneg_lsq with a large problem setup."""
     A = np.random.rand(1000, 500)
     X_true = np.abs(np.random.randn(500))
     B = A @ X_true + 0.01 * np.random.randn(1000)
@@ -176,12 +192,14 @@ def test_nonneg_lsq_large_problem():
 
 
 def test_nonneg_lsq_tolerance(simple_A_B):
+    """Test nonneg_lsq with a specified tolerance."""
     A, B = simple_A_B
     X = nonneg_lsq(A, B, alg="fnnls", tol=1e-4)
     assert np.all(X >= -1e-4), "Solution violates tolerance."
 
 
 def test_nonneg_lsq_max_iter(simple_A_B):
+    """Test nonneg_lsq with max_iter set to force failure."""
     A, B = simple_A_B
     with pytest.raises(ConvergenceError, match="FNNLS failed to converge"):
         nonneg_lsq(
@@ -190,6 +208,7 @@ def test_nonneg_lsq_max_iter(simple_A_B):
 
 
 def test_nonneg_lsq_non_unique_solution():
+    """Test nonneg_lsq with a non-unique solution."""
     A = np.array([[1, 1], [2, 2], [3, 3]], dtype=float)
     B = np.array([6, 12, 18], dtype=float)
     X = nonneg_lsq(A, B, alg="fnnls")
@@ -200,6 +219,7 @@ def test_nonneg_lsq_non_unique_solution():
 
 
 def test_nonneg_lsq_no_solution():
+    """Test nonneg_lsq when no solution exists."""
     A = np.array([[1, 2], [3, 4], [5, 6]], dtype=float)
     B = np.array([-1, -2, -3], dtype=float)
     X = nonneg_lsq(A, B, alg="fnnls")
@@ -210,6 +230,7 @@ def test_nonneg_lsq_no_solution():
 
 
 def test_nonneg_lsq_sparse_matrix():
+    """Test nonneg_lsq with a sparse matrix."""
     A_sparse = csr_matrix([[1, 0], [0, 2], [3, 0]], dtype=float)
     B = np.array([1, 2, 3], dtype=float)
     X = nonneg_lsq(A_sparse.toarray(), B, alg="fnnls")
@@ -220,6 +241,7 @@ def test_nonneg_lsq_sparse_matrix():
 
 
 def test_nonneg_lsq_with_kwargs(simple_A_B):
+    """Test nonneg_lsq with additional unused keyword arguments."""
     A, B = simple_A_B
     X = nonneg_lsq(A, B, alg="fnnls", some_unused_kwarg=123)
     assert X.shape == (A.shape[1],), "Solution shape mismatch with kwargs."
@@ -227,6 +249,7 @@ def test_nonneg_lsq_with_kwargs(simple_A_B):
 
 
 def test_nonneg_lsq_precision():
+    """Test nonneg_lsq for precision with small values."""
     A = np.array([[1, 0], [0, 1]], dtype=float)
     B = np.array([1e-10, 1e-10], dtype=float)
     X = nonneg_lsq(A, B, alg="fnnls", tol=1e-12)
@@ -237,6 +260,7 @@ def test_nonneg_lsq_precision():
 
 
 def test_nonneg_lsq_highly_correlated_columns():
+    """Test nonneg_lsq with highly correlated columns in A."""
     A = np.array([[1, 1.0001], [2, 2.0002], [3, 3.0003]], dtype=float)
     B = np.array([4, 8, 12], dtype=float)
     X = nonneg_lsq(A, B, alg="fnnls")
@@ -247,6 +271,7 @@ def test_nonneg_lsq_highly_correlated_columns():
 
 
 def test_fnnls_core_individual_solution():
+    """Test fnnls_core for an individual solution."""
     AtA = np.array([[4, 2], [2, 3]], dtype=float)
     Atb = np.array([2, 3], dtype=float)
     X = fnnls_core(AtA, Atb)
@@ -257,6 +282,7 @@ def test_fnnls_core_individual_solution():
 
 
 def test_fnnls_core_no_positive_gradients():
+    """Test fnnls_core when no positive gradients exist."""
     AtA = np.array([[1, 0], [0, 1]], dtype=float)
     Atb = np.array([-1, -1], dtype=float)
     X = fnnls_core(AtA, Atb)
@@ -267,6 +293,7 @@ def test_fnnls_core_no_positive_gradients():
 
 
 def test_fnnls_core_max_iter_reached():
+    """Test fnnls_core when max_iter is reached."""
     AtA = np.array([[1, 0], [0, 1]], dtype=float)
     Atb = np.array([1, 1], dtype=float)
     with pytest.raises(ConvergenceError, match="FNNLS failed to converge"):
@@ -274,6 +301,7 @@ def test_fnnls_core_max_iter_reached():
 
 
 def test_fnnls_core_all_positive():
+    """Test fnnls_core when all variables are positive."""
     AtA = np.array([[2, 0], [0, 2]], dtype=float)
     Atb = np.array([2, 2], dtype=float)
     X = fnnls_core(AtA, Atb)

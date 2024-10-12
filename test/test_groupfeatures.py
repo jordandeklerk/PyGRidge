@@ -17,6 +17,7 @@ class TestGroupedFeatures:
     # Tests for __init__
 
     def test_init_valid(self):
+        """Test valid initialization of GroupedFeatures."""
         ps = [2, 3, 5]
         gf = GroupedFeatures(ps)
         assert gf.ps == ps
@@ -34,12 +35,14 @@ class TestGroupedFeatures:
         ],
     )
     def test_init_invalid(self, ps, expected_exception, message):
+        """Test invalid initialization of GroupedFeatures."""
         with pytest.raises(expected_exception, match=message):
             GroupedFeatures(ps)
 
     # Tests for from_group_size
 
     def test_from_group_size_valid(self):
+        """Test valid creation of GroupedFeatures from group size."""
         group_size = 4
         num_groups = 5
         gf = GroupedFeatures.from_group_size(group_size, num_groups)
@@ -61,12 +64,14 @@ class TestGroupedFeatures:
     def test_from_group_size_invalid(
         self, group_size, num_groups, expected_exception, message
     ):
+        """Test invalid creation of GroupedFeatures from group size."""
         with pytest.raises(expected_exception, match=message):
             GroupedFeatures.from_group_size(group_size, num_groups)
 
     # Tests for ngroups and nfeatures
 
     def test_ngroups_nfeatures(self):
+        """Test the number of groups and features in GroupedFeatures."""
         ps = [1, 2, 3]
         gf = GroupedFeatures(ps)
         assert gf.ngroups() == 3
@@ -83,6 +88,7 @@ class TestGroupedFeatures:
         ],
     )
     def test_group_idx_valid(self, ps, i, expected_range):
+        """Test valid group index retrieval."""
         gf = GroupedFeatures(ps)
         idx = gf.group_idx(i)
         assert list(idx) == list(expected_range)
@@ -97,6 +103,7 @@ class TestGroupedFeatures:
         ],
     )
     def test_group_idx_invalid(self, ps, i, expected_exception, message):
+        """Test invalid group index retrieval."""
         gf = GroupedFeatures(ps)
         with pytest.raises(expected_exception, match=message):
             gf.group_idx(i)
@@ -104,6 +111,7 @@ class TestGroupedFeatures:
     # Tests for group_summary
 
     def test_group_summary_valid(self):
+        """Test valid group summary calculation."""
         ps = [2, 3]
         gf = GroupedFeatures(ps)
         vec = [1, 2, 3, 4, 5]
@@ -137,11 +145,13 @@ class TestGroupedFeatures:
         ],
     )
     def test_group_summary_invalid(self, ps, vec, f, expected_exception, message):
+        """Test invalid group summary calculation."""
         gf = GroupedFeatures(ps)
         with pytest.raises(expected_exception, match=message):
             gf.group_summary(vec, f)
 
     def test_group_summary_function_exception(self):
+        """Test exception raised by invalid summary function."""
         ps = [2, 3]
         gf = GroupedFeatures(ps)
         vec = [1, 2, 3, 4, 5]
@@ -154,6 +164,7 @@ class TestGroupedFeatures:
     # Tests for group_expand
 
     def test_group_expand_with_number(self):
+        """Test group expansion with a single number."""
         ps = [2, 3]
         gf = GroupedFeatures(ps)
         num = 7
@@ -161,6 +172,7 @@ class TestGroupedFeatures:
         assert expanded == [7, 7, 7, 7, 7]
 
     def test_group_expand_with_list(self):
+        """Test group expansion with a list of numbers."""
         ps = [2, 3]
         gf = GroupedFeatures(ps)
         vec_or_num = [10, 20]
@@ -186,6 +198,7 @@ class TestGroupedFeatures:
         ],
     )
     def test_group_expand_invalid(self, ps, vec_or_num, expected_exception, message):
+        """Test invalid group expansion input."""
         gf = GroupedFeatures(ps)
         with pytest.raises(expected_exception, match=message):
             gf.group_expand(vec_or_num)
@@ -201,6 +214,7 @@ class TestGroupedFeatures:
         ],
     )
     def test_fill_valid(self, value, length, expected):
+        """Test valid fill function behavior."""
         assert fill(value, length) == expected
 
     @pytest.mark.parametrize(
@@ -212,6 +226,7 @@ class TestGroupedFeatures:
         ],
     )
     def test_fill_invalid(self, value, length, expected_exception, message):
+        """Test invalid fill function input."""
         with pytest.raises(expected_exception, match=message):
             fill(value, length)
 
@@ -221,6 +236,7 @@ class TestGroupedFeatures:
 
 class TestGroupedFeaturesEdgeCases:
     def test_empty_groups(self):
+        """Test behavior with empty group sizes."""
         ps = []
         gf = GroupedFeatures(ps)
         assert gf.ngroups() == 0
@@ -230,6 +246,7 @@ class TestGroupedFeaturesEdgeCases:
         assert summary == []
 
     def test_single_group(self):
+        """Test behavior with a single group."""
         ps = [5]
         gf = GroupedFeatures(ps)
         assert gf.ngroups() == 1
@@ -239,6 +256,7 @@ class TestGroupedFeaturesEdgeCases:
         assert expanded == [10, 10, 10, 10, 10]
 
     def test_group_expand_with_floats(self):
+        """Test group expansion with float values."""
         ps = [1, 2]
         gf = GroupedFeatures(ps)
         vec_or_num = [3.5, 4.5]
@@ -246,6 +264,7 @@ class TestGroupedFeaturesEdgeCases:
         assert expanded == [3.5, 4.5, 4.5]
 
     def test_group_summary_empty(self):
+        """Test group summary on empty input."""
         ps = []
         gf = GroupedFeatures(ps)
         vec = []
@@ -253,6 +272,7 @@ class TestGroupedFeaturesEdgeCases:
         assert summary == []
 
     def test_group_expand_empty(self):
+        """Test group expansion with empty input."""
         ps = []
         gf = GroupedFeatures(ps)
         expanded_num = gf.group_expand(5)
@@ -261,6 +281,7 @@ class TestGroupedFeaturesEdgeCases:
         assert expanded_list == []
 
     def test_group_summary_non_numeric(self):
+        """Test group summary with non-numeric values."""
         ps = [2, 2]
         gf = GroupedFeatures(ps)
         vec = ["a", "b", "c", "d"]
@@ -272,6 +293,7 @@ class TestGroupedFeaturesEdgeCases:
         assert summary == ["ab", "cd"]
 
     def test_group_expand_with_non_numeric_list(self):
+        """Test group expansion with a list of non-numeric values."""
         ps = [2, 3]
         gf = GroupedFeatures(ps)
         vec_or_num = ["x", "y"]
@@ -279,6 +301,7 @@ class TestGroupedFeaturesEdgeCases:
         assert expanded == ["x", "x", "y", "y", "y"]
 
     def test_group_summary_with_different_types(self):
+        """Test group summary with mixed types."""
         ps = [1, 1]
         gf = GroupedFeatures(ps)
         vec = [True, False]

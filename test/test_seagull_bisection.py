@@ -4,6 +4,7 @@ from ..src.seagull_bisection import seagull_bisection
 
 
 def test_seagull_bisection_basic():
+    """Test basic functionality of seagull_bisection."""
     rows = 5
     alpha = 0.5
     left_border = 0.0
@@ -19,7 +20,7 @@ def test_seagull_bisection_basic():
 
 
 def test_seagull_bisection_edge_cases():
-    # Test with alpha at boundaries
+    """Test seagull_bisection with alpha at boundary values."""
     with pytest.raises(ValueError):
         seagull_bisection(5, 0.0, 0.0, 1.0, 1.0, np.ones(5), np.ones(5))
 
@@ -28,6 +29,7 @@ def test_seagull_bisection_edge_cases():
 
 
 def test_seagull_bisection_convergence():
+    """Test convergence of seagull_bisection results."""
     rows = 10
     alpha = 0.5
     left_border = 0.0
@@ -47,6 +49,7 @@ def test_seagull_bisection_convergence():
 
 
 def test_seagull_bisection_negative_values():
+    """Test seagull_bisection with negative input values."""
     rows = 5
     alpha = 0.5
     left_border = -1.0
@@ -62,6 +65,7 @@ def test_seagull_bisection_negative_values():
 
 
 def test_seagull_bisection_large_values():
+    """Test seagull_bisection with large input values."""
     rows = 5
     alpha = 0.5
     left_border = 0.0
@@ -77,6 +81,7 @@ def test_seagull_bisection_large_values():
 
 
 def test_seagull_bisection_small_values():
+    """Test seagull_bisection with small input values."""
     rows = 5
     alpha = 0.5
     left_border = 0.0
@@ -92,6 +97,7 @@ def test_seagull_bisection_small_values():
 
 
 def test_seagull_bisection_input_validation():
+    """Test input validation for seagull_bisection."""
     rows = 5
     vector_weights = np.ones(rows)
     vector_in = np.ones(rows)

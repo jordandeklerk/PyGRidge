@@ -1,8 +1,8 @@
 """Create and manage grouped feature structures for statistical modeling.
 
-This module implements a flexible system for handling grouped features, particularly 
-useful in scenarios involving multi-modal data, categorical variables, or time series 
-with repeated measurements.
+This module implements a flexible system for handling grouped features,
+particularly useful in scenarios involving multi-modal data, categorical
+variables, or time series with repeated measurements.
 
 The module provides:
 
@@ -26,7 +26,8 @@ class GroupedFeatures:
     """
     A class representing groups of features.
 
-    The first `ps[0]` features are one group, the next `ps[1]` features are the second group and so forth.
+    The first `ps[0]` features are one group, the next `ps[1]` features are the
+    second group and so forth.
 
     Parameters
     ----------
@@ -170,7 +171,8 @@ class GroupedFeatures:
         vec : array-like of shape (n_features,) or (n_samples, n_features)
             List or ndarray of features.
         f : callable
-            Function that takes a list or ndarray of features and returns a summary value.
+            Function that takes a list or ndarray of features and returns a
+            summary value.
 
         Returns
         -------
@@ -236,12 +238,14 @@ class GroupedFeatures:
         Expand a vector or number to a list of features.
 
         If vec_or_num is a number, replicate it across all features.
-        If it is a list or ndarray, each element corresponds to a group and is replicated within the group.
+        If it is a list or ndarray, each element corresponds to a group and is
+        replicated within the group.
 
         Parameters
         ----------
         vec_or_num : int, float, list or ndarray
-            Either a single number or a list/ndarray with length equal to number of groups.
+            Either a single number or a list/ndarray with length equal to number
+            of groups.
 
         Returns
         -------
@@ -253,7 +257,8 @@ class GroupedFeatures:
         TypeError
             If vec_or_num is neither a number nor a list/ndarray.
         ValueError
-            If vec_or_num is a list/ndarray but its length does not match number of groups.
+            If vec_or_num is a list/ndarray but its length does not match number
+            of groups.
         """
         if isinstance(vec_or_num, (int, float)):
             return [vec_or_num] * self.p

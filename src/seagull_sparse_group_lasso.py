@@ -1,5 +1,6 @@
 """
-This module implements the Sparse-Group LASSO algorithm using proximal gradient descent.
+This module implements the Sparse-Group LASSO algorithm using proximal gradient
+descent.
 
 The main function, seagull_sparse_group_lasso, solves the optimization problem:
 min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
@@ -7,9 +8,10 @@ min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
 where P(beta) is the sparse-group lasso penalty:
 P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
 
-The algorithm uses soft-thresholding for the LASSO penalty and group soft-thresholding 
-for the group LASSO penalty. It supports multiple lambda values for regularization path, 
-and handles both fixed and random effects in mixed models.
+The algorithm uses soft-thresholding for the LASSO penalty and group
+soft-thresholding for the group LASSO penalty. It supports multiple lambda
+values for regularization path and handles both fixed and random effects in
+mixed models.
 """
 
 import numpy as np
@@ -53,23 +55,28 @@ def seagull_sparse_group_lasso(
     feature_weights : ndarray of shape (n_features,)
         Weights for the vectors of fixed and random effects [b^T, u^T]^T.
     groups : ndarray of shape (n_features,)
-        Integer vector specifying group membership for each effect (fixed and random).
+        Integer vector specifying group membership for each effect (fixed and
+        random).
     beta : ndarray of shape (n_features,)
         Initial guess for the coefficient vector.
     index_permutation : ndarray of shape (n_features,)
-        Integer vector containing information about the original order of the user's input.
+        Integer vector containing information about the original order of the
+        user's input.
     alpha : float
         Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
     epsilon_convergence : float
         Relative accuracy of the solution.
     max_iterations : int
-        Maximum number of iterations for each value of the penalty parameter lambda.
+        Maximum number of iterations for each value of the penalty parameter
+        lambda.
     gamma : float
-        Multiplicative parameter to decrease the step size during backtracking line search.
+        Multiplicative parameter to decrease the step size during backtracking
+        line search.
     lambda_max : float
         Maximum value for the penalty parameter.
     proportion_xi : float
-        Multiplicative parameter to determine the minimum value of lambda for the grid search.
+        Multiplicative parameter to determine the minimum value of lambda for
+        the grid search.
     num_intervals : int
         Number of lambdas for the grid search.
     num_fixed_effects : int
@@ -82,8 +89,10 @@ def seagull_sparse_group_lasso(
     dict
         A dictionary containing the results of the sparse-group lasso algorithm.
         Keys include:
-        - 'random_effects': ndarray of shape (num_intervals, n_features) or (num_intervals, n_features - num_fixed_effects)
-        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects) (only if num_fixed_effects > 0)
+        - 'random_effects': ndarray of shape (num_intervals, n_features) or
+          (num_intervals, n_features - num_fixed_effects)
+        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects)
+          (only if num_fixed_effects > 0)
         - 'lambda': ndarray of shape (num_intervals,)
         - 'iterations': ndarray of shape (num_intervals,)
         - 'alpha': float
@@ -95,8 +104,8 @@ def seagull_sparse_group_lasso(
 
     Notes
     -----
-    The algorithm uses proximal gradient descent with soft-thresholding
-    for the lasso penalty and group soft-thresholding for the group lasso penalty.
+    The algorithm uses proximal gradient descent with soft-thresholding for the
+    lasso penalty and group soft-thresholding for the group lasso penalty.
     """
     n, p = X.shape
     num_groups = np.max(groups)

@@ -15,6 +15,7 @@ def sample_data():
 
 
 def test_lambda_max_lasso_output(sample_data):
+    """Test that lambda_max_lasso returns a positive float."""
     y, feature_weights, beta, X = sample_data
     result = lambda_max_lasso(y, feature_weights, beta, X)
     assert isinstance(result, float)
@@ -22,6 +23,7 @@ def test_lambda_max_lasso_output(sample_data):
 
 
 def test_lambda_max_lasso_with_zero_weights(sample_data):
+    """Test lambda_max_lasso with some feature weights set to zero."""
     y, feature_weights, beta, X = sample_data
     feature_weights[:5] = 0  # Set first 5 weights to zero
     result = lambda_max_lasso(y, feature_weights, beta, X)
@@ -30,6 +32,7 @@ def test_lambda_max_lasso_with_zero_weights(sample_data):
 
 
 def test_lambda_max_lasso_all_penalized():
+    """Test lambda_max_lasso when all features are penalized."""
     n, p = 50, 5
     y = np.random.randn(n)
     feature_weights = np.ones(p)
@@ -41,6 +44,7 @@ def test_lambda_max_lasso_all_penalized():
 
 
 def test_lambda_max_lasso_dimension_mismatch():
+    """Test lambda_max_lasso raises ValueError for dimension mismatch."""
     n, p = 50, 5
     y = np.random.randn(n)
     feature_weights = np.ones(p)
@@ -51,6 +55,7 @@ def test_lambda_max_lasso_dimension_mismatch():
 
 
 def test_lambda_max_lasso_numeric_correction():
+    """Test that lambda_max_lasso result is corrected numerically."""
     n, p = 50, 5
     y = np.random.randn(n)
     feature_weights = np.ones(p)

@@ -1,10 +1,11 @@
 """
-This module provides functionality to compute the maximum lambda value for sparse group lasso regularization.
+This module provides functionality to compute the maximum lambda value for sparse
+group lasso regularization.
 
-It contains a single function, lambda_max_sparse_group_lasso, which calculates the largest
-lambda value that results in a non-zero solution for the sparse group lasso problem. This is
-useful for setting up a regularization path or for determining an appropriate range
-of lambda values for cross-validation.
+It contains a single function, lambda_max_sparse_group_lasso, which calculates
+the largest lambda value that results in a non-zero solution for the sparse
+group lasso problem. This is useful for setting up a regularization path or for
+determining an appropriate range of lambda values for cross-validation.
 """
 
 import numpy as np
@@ -19,7 +20,8 @@ def lambda_max_sparse_group_lasso(
     vector_beta: np.ndarray,
     matrix_x: np.ndarray,
 ) -> float:
-    """Calculate the maximum value for the penalty parameter lambda in sparse group lasso.
+    """
+    Calculate the maximum value for the penalty parameter lambda in sparse group lasso.
 
     This function computes the maximum value for the penalty parameter lambda
     in the sparse group lasso problem.

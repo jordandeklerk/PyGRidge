@@ -1,18 +1,18 @@
 """
-This module provides functionality to compute the maximum lambda value for LASSO regularization.
+This module provides functionality to compute the maximum lambda value for LASSO
+regularization.
 
 It contains a single function, lambda_max_lasso, which calculates the largest
 lambda value that results in a non-zero solution for the LASSO problem. This is
-useful for setting up a regularization path or for determining an appropriate range
-of lambda values for cross-validation.
+useful for setting up a regularization path or for determining an appropriate
+range of lambda values for cross-validation.
 """
 
 import numpy as np
 
 
 def lambda_max_lasso(y, feature_weights, beta, X):
-    """
-    Compute the maximal lambda for LASSO regression.
+    """Compute the maximal lambda for LASSO regression.
 
     Parameters
     ----------
@@ -22,8 +22,8 @@ def lambda_max_lasso(y, feature_weights, beta, X):
         Weights for the feature vector [b^T, u^T]^T. The entries may be permuted
         corresponding to their group assignments.
     beta : array-like of shape (n_features,)
-        Feature vector. Random effects are initialized to zero,
-        fixed effects are initialized via least squares.
+        Feature vector. Random effects are initialized to zero, fixed effects
+        are initialized via least squares.
     X : array-like of shape (n_samples, n_features)
         Design matrix [X Z] relating y to fixed and random effects.
 
@@ -38,8 +38,8 @@ def lambda_max_lasso(y, feature_weights, beta, X):
 
     lambda_max = max_i |X_i^T r| / (n w_i)
 
-    where X_i is the i-th column of X, r is the residual,
-    n is the number of samples, and w_i is the weight for feature i.
+    where X_i is the i-th column of X, r is the residual, n is the number of
+    samples, and w_i is the weight for feature i.
     """
     n, p = X.shape
 

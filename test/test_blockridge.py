@@ -21,12 +21,14 @@ from ..src.nnls import NNLSError
 
 @pytest.fixture
 def X():
+    """Generate a random matrix X for testing."""
     np.random.seed(0)
     return np.random.randn(100, 10)
 
 
 @pytest.fixture
 def Y(X):
+    """Generate a response vector Y based on X for testing."""
     np.random.seed(1)
     beta_true = np.random.randn(X.shape[1])
     noise = np.random.randn(X.shape[0])
@@ -46,6 +48,7 @@ def Y(X):
     ]
 )
 def groups(request):
+    """Generate different group configurations for testing."""
     return GroupedFeatures(request.param)
 
 
@@ -53,6 +56,7 @@ def groups(request):
 # Tests for CholeskyRidgePredictor
 # ------------------------------
 def test_cholesky_ridge_predictor_initialization(X):
+    """Test the initialization of CholeskyRidgePredictor."""
     predictor = CholeskyRidgePredictor(X)
     expected_XtX = np.dot(X.T, X) / X.shape[0]
     np.testing.assert_allclose(predictor.XtX, expected_XtX, atol=1e-6)
@@ -64,6 +68,7 @@ def test_cholesky_ridge_predictor_initialization(X):
 
 
 def test_cholesky_ridge_predictor_update_lambda_s(X, groups):
+    """Test updating lambda values in CholeskyRidgePredictor."""
     predictor = CholeskyRidgePredictor(X)
     # Generate lambdas based on the number of groups
     lambdas = np.linspace(0.5, 1.5, groups.num_groups)
@@ -77,6 +82,7 @@ def test_cholesky_ridge_predictor_update_lambda_s(X, groups):
 
 
 def test_cholesky_ridge_predictor_ldiv(X):
+    """Test the ldiv operation of CholeskyRidgePredictor."""
     predictor = CholeskyRidgePredictor(X)
     B = np.random.randn(X.shape[1], 3)
     result = predictor.ldiv(B)
@@ -88,6 +94,7 @@ def test_cholesky_ridge_predictor_ldiv(X):
 # Tests for WoodburyRidgePredictor
 # ------------------------------
 def test_woodbury_ridge_predictor_initialization(X):
+    """Test the initialization of WoodburyRidgePredictor."""
     predictor = WoodburyRidgePredictor(X)
     p = X.shape[1]
     assert predictor.A_inv.shape == (p, p)
@@ -96,6 +103,7 @@ def test_woodbury_ridge_predictor_initialization(X):
 
 
 def test_woodbury_ridge_predictor_update_lambda_s(X, groups):
+    """Test updating lambda values in WoodburyRidgePredictor."""
     predictor = WoodburyRidgePredictor(X)
     # Generate lambdas based on the number of groups
     lambdas = np.linspace(0.5, 1.5, groups.num_groups)
@@ -118,6 +126,7 @@ def test_woodbury_ridge_predictor_update_lambda_s(X, groups):
 # Tests for BasicGroupRidgeWorkspace
 # ------------------------------
 def test_basic_group_ridge_workspace_initialization(X, Y, groups):
+    """Test the initialization of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     assert workspace.n == X.shape[0]
     assert workspace.p == X.shape[1]
@@ -130,6 +139,7 @@ def test_basic_group_ridge_workspace_initialization(X, Y, groups):
 
 
 def test_basic_group_ridge_workspace_fit(X, Y, groups):
+    """Test the fit method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     # Generate lambdas based on the number of groups
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
@@ -142,6 +152,7 @@ def test_basic_group_ridge_workspace_fit(X, Y, groups):
 
 
 def test_basic_group_ridge_workspace_update_lambda_s(X, Y, groups):
+    """Test updating lambda values in BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     new_lambdas = np.random.rand(groups.num_groups)
     workspace.update_lambda_s(new_lambdas)
@@ -149,21 +160,25 @@ def test_basic_group_ridge_workspace_update_lambda_s(X, Y, groups):
 
 
 def test_basic_group_ridge_workspace_ngroups(X, Y, groups):
+    """Test the ngroups method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     assert workspace.ngroups() == groups.num_groups
 
 
 def test_basic_group_ridge_workspace_coef(X, Y, groups):
+    """Test the coef method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     assert np.allclose(workspace.coef(), workspace.beta_current)
 
 
 def test_basic_group_ridge_workspace_islinear(X, Y, groups):
+    """Test the islinear method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     assert workspace.islinear() == True
 
 
 def test_basic_group_ridge_workspace_leverage(X, Y, groups):
+    """Test the leverage method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     workspace.fit(np.ones(groups.num_groups))
     leverage = workspace.leverage()
@@ -172,16 +187,19 @@ def test_basic_group_ridge_workspace_leverage(X, Y, groups):
 
 
 def test_basic_group_ridge_workspace_modelmatrix(X, Y, groups):
+    """Test the modelmatrix method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     np.testing.assert_allclose(workspace.modelmatrix(), X)
 
 
 def test_basic_group_ridge_workspace_response(X, Y, groups):
+    """Test the response method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     np.testing.assert_allclose(workspace.response(), Y)
 
 
 def test_basic_group_ridge_workspace_fit_with_dict(X, Y, groups):
+    """Test fitting BasicGroupRidgeWorkspace with a dictionary of lambda values."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambda_dict = {
         f"group_{i}": val for i, val in enumerate(np.random.rand(groups.num_groups))
@@ -192,6 +210,7 @@ def test_basic_group_ridge_workspace_fit_with_dict(X, Y, groups):
 
 
 def test_basic_group_ridge_workspace_predict_new_data(X, Y, groups):
+    """Test predicting with new data using BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     workspace.fit(np.ones(groups.num_groups))
     X_new = np.random.randn(10, X.shape[1])
@@ -203,6 +222,7 @@ def test_basic_group_ridge_workspace_predict_new_data(X, Y, groups):
 # Tests for Lambda LOLAS Rule
 # ------------------------------
 def test_lambda_lolas_rule(X, Y, groups):
+    """Test the lambda LOLAS rule calculation."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     workspace.fit(np.ones(groups.num_groups))
     mom = MomentTunerSetup(workspace)
@@ -217,6 +237,7 @@ def test_lambda_lolas_rule(X, Y, groups):
 # Tests for MomentTunerSetup
 # ------------------------------
 def test_moment_tuner_setup(X, Y, groups):
+    """Test the initialization of MomentTunerSetup."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     mom = MomentTunerSetup(workspace)
     assert mom.ps.tolist() == groups.ps
@@ -230,6 +251,7 @@ def test_moment_tuner_setup(X, Y, groups):
 # Tests for Sigma Squared Path
 # ------------------------------
 def test_sigma_squared_path(X, Y, groups):
+    """Test the sigma squared path calculation."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.ones(groups.num_groups)
     workspace.fit(lambdas)
@@ -248,6 +270,7 @@ def test_sigma_squared_path(X, Y, groups):
 # Tests for Get Lambdas
 # ------------------------------
 def test_get_lambdas(X, Y, groups):
+    """Test the get_lambdas function."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
     workspace.fit(lambdas)
@@ -266,6 +289,7 @@ def test_get_lambdas(X, Y, groups):
 # Tests for Get Alpha Squared
 # ------------------------------
 def test_get_alpha_s_squared(X, Y, groups):
+    """Test the get_alpha_s_squared function."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
     workspace.fit(lambdas)
@@ -285,6 +309,7 @@ def test_get_alpha_s_squared(X, Y, groups):
 # Tests for Prediction
 # ------------------------------
 def test_predict(X, Y, groups):
+    """Test the predict method of BasicGroupRidgeWorkspace."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
     workspace.fit(lambdas)
@@ -296,6 +321,7 @@ def test_predict(X, Y, groups):
 # Tests for LOO Error
 # ------------------------------
 def test_loo_error(X, Y, groups):
+    """Test the leave-one-out error calculation."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
     loo_error = workspace.fit(lambdas)
@@ -308,6 +334,7 @@ def test_loo_error(X, Y, groups):
 # Tests for MSE Ridge
 # ------------------------------
 def test_mse_ridge(X, Y, groups):
+    """Test the mean squared error calculation for ridge regression."""
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
     lambdas = np.linspace(1.0, 1.0, groups.num_groups)
     workspace.fit(lambdas)
@@ -320,6 +347,7 @@ def test_mse_ridge(X, Y, groups):
 
 @pytest.fixture
 def high_dim_data():
+    """Generate high-dimensional data for testing."""
     np.random.seed(42)
     n = 100  # Number of observations
     p = 1000  # Number of features (p >> n)
@@ -334,6 +362,7 @@ def high_dim_data():
 # Tests for High Dimensional Case
 # ------------------------------
 def test_high_dimensional_case(high_dim_data):
+    """Test various components of the ridge regression in high-dimensional settings."""
     X, Y, groups = high_dim_data
     workspace = BasicGroupRidgeWorkspace(X=X, Y=Y, groups=groups)
 
@@ -384,6 +413,7 @@ def test_high_dimensional_case(high_dim_data):
 # Tests for High Dimensional Predictor Speed
 # ------------------------------
 def test_high_dimensional_predictor_speed(high_dim_data):
+    """Compare the speed of Cholesky and Woodbury predictors in high-dimensional settings."""
     X, Y, groups = high_dim_data
     lambdas = np.ones(groups.num_groups)
     n, p = X.shape
@@ -432,6 +462,7 @@ def test_high_dimensional_predictor_speed(high_dim_data):
 
 @pytest.fixture
 def very_high_dim_data():
+    """Generate very high-dimensional data for testing."""
     np.random.seed(42)
     n = 100  # Number of observations
     p = 10000  # Number of features (p >>> n)
@@ -446,6 +477,7 @@ def very_high_dim_data():
 # Tests for Very High Dimensional Predictor Speed
 # ------------------------------
 def test_very_high_dimensional_predictor_speed(very_high_dim_data):
+    """Compare the speed of Cholesky and Woodbury predictors in very high-dimensional settings."""
     X, Y, groups = very_high_dim_data
     lambdas = np.ones(groups.num_groups)
     n, p = X.shape
@@ -497,6 +529,7 @@ def test_very_high_dimensional_predictor_speed(very_high_dim_data):
 # Tests for ShermanMorrisonRidgePredictor
 # ------------------------------
 def test_sherman_morrison_ridge_predictor_initialization(X):
+    """Test the initialization of ShermanMorrisonRidgePredictor."""
     predictor = ShermanMorrisonRidgePredictor(X)
     expected_A = np.eye(X.shape[1]) + (X.T @ X) / X.shape[0]
     expected_A_inv = np.linalg.inv(expected_A)
@@ -506,6 +539,7 @@ def test_sherman_morrison_ridge_predictor_initialization(X):
 
 
 def test_sherman_morrison_ridge_predictor_update_lambda_s(X, groups):
+    """Test the update_lambda_s method of ShermanMorrisonRidgePredictor."""
     predictor = ShermanMorrisonRidgePredictor(X)
     lambdas = np.linspace(0.5, 1.5, groups.num_groups)
     predictor.update_lambda_s(groups, lambdas)
@@ -518,6 +552,7 @@ def test_sherman_morrison_ridge_predictor_update_lambda_s(X, groups):
 
 
 def test_sherman_morrison_single_update(X):
+    """Test a single Sherman-Morrison update."""
     predictor = ShermanMorrisonRidgePredictor(X)
     u = np.random.randn(X.shape[1])
     v = np.random.randn(X.shape[1])
@@ -538,6 +573,7 @@ def test_sherman_morrison_single_update(X):
 
 
 def test_sherman_morrison_ridge_predictor_ldiv(X):
+    """Test the ldiv method of ShermanMorrisonRidgePredictor."""
     predictor = ShermanMorrisonRidgePredictor(X)
     B = np.random.randn(X.shape[1], 3)
     result = predictor.ldiv(B)
@@ -546,6 +582,7 @@ def test_sherman_morrison_ridge_predictor_ldiv(X):
 
 
 def test_sherman_morrison_formula(X):
+    """Test the Sherman-Morrison formula implementation."""
     predictor = ShermanMorrisonRidgePredictor(X)
 
     # Initialize A and compute its inverse
@@ -565,6 +602,7 @@ def test_sherman_morrison_formula(X):
 
 
 def test_sherman_morrison_predictor_in_high_dimensional_case(high_dim_data):
+    """Test ShermanMorrisonRidgePredictor in high-dimensional settings."""
     X, Y, groups = high_dim_data
     predictor = ShermanMorrisonRidgePredictor(X)
 
@@ -582,6 +620,7 @@ def test_sherman_morrison_predictor_in_high_dimensional_case(high_dim_data):
 
 
 def test_very_high_dimensional_predictor_speed(very_high_dim_data):
+    """Compare the speed of Cholesky, Woodbury, and Sherman-Morrison predictors in very high-dimensional settings."""
     X, Y, groups = very_high_dim_data
     lambdas = np.ones(groups.num_groups)
     n, p = X.shape

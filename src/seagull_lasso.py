@@ -1,8 +1,11 @@
 """
-This module implements the seagull lasso algorithm for solving Lasso regression problems.
+This module implements the seagull lasso algorithm for solving Lasso
+regression problems.
 
-It provides a single function, seagull_lasso, which performs the optimization using coordinate descent with soft-thresholding.
-The algorithm supports various penalty terms and can handle fixed and random effects in mixed models.
+It provides a single function, seagull_lasso, which performs the
+optimization using coordinate descent with soft-thresholding. The
+algorithm supports various penalty terms and can handle fixed and
+random effects in mixed models.
 """
 
 import numpy as np
@@ -40,13 +43,16 @@ def seagull_lasso(
     epsilon_convergence : float
         Relative accuracy of the solution.
     max_iterations : int
-        Maximum number of iterations for each value of the penalty parameter λ.
+        Maximum number of iterations for each value of the penalty
+        parameter λ.
     gamma : float
-        Multiplicative parameter to decrease the step size during backtracking line search.
+        Multiplicative parameter to decrease the step size during
+        backtracking line search.
     lambda_max : float
         Maximum value for the penalty parameter.
     proportion_xi : float
-        Multiplicative parameter to determine the minimum value of λ for the grid search.
+        Multiplicative parameter to determine the minimum value of λ for
+        the grid search.
     num_intervals : int
         Number of lambdas for the grid search.
     num_fixed_effects : int
@@ -59,8 +65,10 @@ def seagull_lasso(
     dict
         A dictionary containing the results of the lasso algorithm.
         Keys include:
-        - 'random_effects': ndarray of shape (num_intervals, n_features) or (num_intervals, n_features - num_fixed_effects)
-        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects) (only if num_fixed_effects > 0)
+        - 'random_effects': ndarray of shape (num_intervals, n_features)
+          or (num_intervals, n_features - num_fixed_effects)
+        - 'fixed_effects': ndarray of shape (num_intervals,
+          num_fixed_effects) (only if num_fixed_effects > 0)
         - 'lambda': ndarray of shape (num_intervals,)
         - 'iterations': ndarray of shape (num_intervals,)
         - 'rel_acc': float
@@ -78,7 +86,8 @@ def seagull_lasso(
     where P(beta) is the penalty term, which can be:
     - Lasso: sum_j |beta_j|
     - Group Lasso: sum_g ||beta_g||_2
-    - Sparse Group Lasso: alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+    - Sparse Group Lasso: alpha * sum_j |beta_j| + (1-alpha) *
+      sum_g ||beta_g||_2
 
     The algorithm uses coordinate descent with soft-thresholding.
     """

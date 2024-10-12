@@ -1,8 +1,10 @@
 """
-This module implements a bisection algorithm for finding the smallest positive root of a polynomial.
+This module implements a bisection algorithm for finding the smallest positive
+root of a polynomial.
 
-The main function, seagull_bisection, is used in sparse group lasso optimization to find
-the root of a specific polynomial arising from the proximal operator calculation.
+The main function, seagull_bisection, is used in sparse group lasso optimization
+to find the root of a specific polynomial arising from the proximal operator
+calculation.
 """
 
 import numpy as np
@@ -21,12 +23,12 @@ def seagull_bisection(
     vector_weights: np.ndarray,
     vector_in: np.ndarray,
 ) -> float:
-    """
-    Internal bisection algorithm for finding the smallest positive root of a polynomial.
+    """Internal bisection algorithm for finding the smallest positive root of a
+    polynomial.
 
-    This algorithm finds the smallest positive root of a polynomial
-    of second degree in lambda. Bisection is an implicit algorithm, i.e.,
-    it calls itself until a certain precision is reached.
+    This algorithm finds the smallest positive root of a polynomial of second
+    degree in lambda. Bisection is an implicit algorithm, i.e., it calls itself
+    until a certain precision is reached.
 
     Parameters
     ----------
@@ -34,42 +36,49 @@ def seagull_bisection(
         The length of the input vectors.
     alpha : float
         Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
-        The penalty term is: alpha * "lasso penalty" + (1-alpha) * "group lasso penalty".
+        The penalty term is: alpha * "lasso penalty" + (1-alpha) * "group lasso
+        penalty".
     left_border : float
-        Value of the left border of the current interval that for sure harbors a root.
+        Value of the left border of the current interval that for sure harbors
+        a root.
     right_border : float
-        Value of the right border of the current interval that for sure harbors a root.
+        Value of the right border of the current interval that for sure harbors
+        a root.
     group_weight : float
         A multiplicative scalar which is part of the polynomial.
     vector_weights : ndarray of shape (rows,)
-        An input vector of multiplicative scalars which are part of the polynomial.
-        This vector is a subset of the vector of weights for features.
+        An input vector of multiplicative scalars which are part of the
+        polynomial. This vector is a subset of the vector of weights for
+        features.
     vector_in : ndarray of shape (rows,)
-        Another input vector which is required to compute the value of the polynomial.
+        Another input vector which is required to compute the value of the
+        polynomial.
 
     Returns
     -------
     float
-        The smallest positive root of the polynomial, or the center point
-        of the interval containing the root if a certain precision is reached.
+        The smallest positive root of the polynomial, or the center point of
+        the interval containing the root if a certain precision is reached.
 
     Raises
     ------
     ValueError
-        If alpha is not between 0 and 1 (exclusive), if left_border is greater than
-        or equal to right_border, or if the lengths of vector_weights and vector_in
-        do not match the specified number of rows.
+        If alpha is not between 0 and 1 (exclusive), if left_border is greater
+        than or equal to right_border, or if the lengths of vector_weights and
+        vector_in do not match the specified number of rows.
     RuntimeError
-        If the bisection algorithm does not converge after the maximum number of iterations.
+        If the bisection algorithm does not converge after the maximum number
+        of iterations.
 
     Notes
     -----
     The algorithm uses a bisection method to find the root of the polynomial:
 
-    f(lambda) = sum_i max(0, |x_i| - alpha * lambda * w_i)^2 - (1-alpha)^2 * lambda^2 * g
+    f(lambda) = sum_i max(0, |x_i| - alpha * lambda * w_i)^2 - (1-alpha)^2 *
+    lambda^2 * g
 
-    where x_i are the elements of vector_in, w_i are the elements of vector_weights,
-    and g is the group_weight.
+    where x_i are the elements of vector_in, w_i are the elements of
+    vector_weights, and g is the group_weight.
     """
     # Input validation
     if not (0 < alpha < 1):

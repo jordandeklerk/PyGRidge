@@ -1,7 +1,7 @@
 """Create covariance matrix designs for various statistical models.
 
-This module implements a comprehensive suite of covariance matrix designs and related 
-utilities, designed for flexible and efficient construction of covariance structures 
+This module implements a comprehensive suite of covariance matrix designs and related
+utilities, designed for flexible and efficient construction of covariance structures
 in statistical modeling, particularly suitable for complex hierarchical models.
 
 The module provides:
@@ -12,12 +12,15 @@ The module provides:
    - DiagonalCovarianceDesign: Base class for diagonal covariance matrices.
    - IdentityCovarianceDesign: Constructs identity covariance matrix.
    - UniformScalingCovarianceDesign: Creates diagonal matrix with uniform scaling.
-   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential order statistics.
+   - ExponentialOrderStatsCovarianceDesign: Generates eigenvalues based on exponential
+     order statistics.
 
 2. Composite covariance structures:
    - BlockDiagonal: Represents block diagonal matrices.
-   - MixtureModel: Implements mixture of multiple spectra with associated mixing proportions.
-   - BlockCovarianceDesign: Constructs complex covariance structures by composing multiple designs.
+   - MixtureModel: Implements mixture of multiple spectra with associated mixing
+     proportions.
+   - BlockCovarianceDesign: Constructs complex covariance structures by composing
+     multiple designs.
 
 3. Utility functions:
    - block_diag: Constructs block diagonal matrix from input arrays.
@@ -35,8 +38,8 @@ from ..src.groupedfeatures import GroupedFeatures, fill
 
 
 class DiscreteNonParametric:
-    """
-    Represents a discrete non-parametric spectrum characterized by eigenvalues and their associated probabilities.
+    """Represents a discrete non-parametric spectrum characterized by eigenvalues and their
+    associated probabilities.
 
     Parameters
     ----------
@@ -82,8 +85,7 @@ class DiscreteNonParametric:
 
 
 class CovarianceDesign(ABC):
-    """
-    Abstract base class defining the interface for covariance matrix designs.
+    """Abstract base class defining the interface for covariance matrix designs.
 
     This class outlines the essential methods that any covariance design must implement:
     - `get_Sigma`: Retrieve the covariance matrix.
@@ -107,8 +109,7 @@ class CovarianceDesign(ABC):
 
     @abstractmethod
     def get_Sigma(self) -> np.ndarray:
-        """
-        Constructs and returns the covariance matrix \Sigma.
+        """Constructs and returns the covariance matrix \Sigma.
 
         Returns
         -------
@@ -119,8 +120,7 @@ class CovarianceDesign(ABC):
 
     @abstractmethod
     def nfeatures(self) -> int:
-        """
-        Retrieves the number of features (dimensions) in the covariance matrix \Sigma.
+        """Retrieves the number of features (dimensions) in the covariance matrix \Sigma.
 
         Returns
         -------
@@ -131,8 +131,7 @@ class CovarianceDesign(ABC):
 
     @abstractmethod
     def spectrum(self) -> DiscreteNonParametric:
-        """
-        Computes the spectral decomposition of the covariance matrix \Sigma.
+        """Computes the spectral decomposition of the covariance matrix \Sigma.
 
         Returns
         -------
@@ -143,8 +142,7 @@ class CovarianceDesign(ABC):
 
 
 class AR1Design(CovarianceDesign):
-    """
-    Implements an AutoRegressive model of order 1 (AR(1)) for covariance matrix design.
+    """Implements an AutoRegressive model of order 1 (AR(1)) for covariance matrix design.
 
     In an AR(1) model, each element \Sigma_{i,j} of the covariance matrix \Sigma is defined as:
 
@@ -236,8 +234,7 @@ class AR1Design(CovarianceDesign):
 
 
 class DiagonalCovarianceDesign(CovarianceDesign):
-    """
-    Abstract base class for covariance designs that produce diagonal covariance matrices.
+    """Abstract base class for covariance designs that produce diagonal covariance matrices.
 
     Since diagonal covariance matrices have non-zero entries only on the diagonal, this class
     provides a common structure for such designs, managing the number of features.
@@ -276,8 +273,8 @@ class DiagonalCovarianceDesign(CovarianceDesign):
 
 
 class IdentityCovarianceDesign(DiagonalCovarianceDesign):
-    """
-    Constructs an identity covariance matrix \Sigma, where all diagonal entries are 1 and off-diagonal entries are 0.
+    """Constructs an identity covariance matrix \Sigma, where all diagonal entries are 1 and
+    off-diagonal entries are 0.
 
     The identity matrix represents uncorrelated features with unit variance.
 
@@ -330,8 +327,7 @@ class IdentityCovarianceDesign(DiagonalCovarianceDesign):
 
 
 class UniformScalingCovarianceDesign(DiagonalCovarianceDesign):
-    """
-    Constructs a diagonal covariance matrix \Sigma with uniform scaling on the diagonal.
+    """Constructs a diagonal covariance matrix \Sigma with uniform scaling on the diagonal.
 
     Each diagonal entry \Sigma_{i,i} is set to a constant scaling factor.
 
@@ -393,9 +389,9 @@ class UniformScalingCovarianceDesign(DiagonalCovarianceDesign):
 
 
 class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
-    """
-    Constructs a diagonal covariance matrix \Sigma using exponential order statistics for the eigenvalues.
-    The eigenvalues are generated based on the order statistics of exponential random variables with a specified rate.
+    """Constructs a diagonal covariance matrix \Sigma using exponential order statistics for the
+    eigenvalues. The eigenvalues are generated based on the order statistics of exponential
+    random variables with a specified rate.
 
     The i-th eigenvalue is computed as:
 
@@ -420,7 +416,8 @@ class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
     Methods
     -------
     spectrum() -> DiscreteNonParametric
-        Generates the eigenvalues based on exponential order statistics and assigns equal probabilities.
+        Generates the eigenvalues based on exponential order statistics and assigns equal
+        probabilities.
 
     get_Sigma() -> numpy.ndarray
         Returns a diagonal matrix with the generated eigenvalues.
@@ -482,11 +479,10 @@ class ExponentialOrderStatsCovarianceDesign(DiagonalCovarianceDesign):
 
 
 class BlockDiagonal:
-    """
-    Represents a block diagonal matrix composed of smaller square matrices (blocks).
+    """Represents a block diagonal matrix composed of smaller square matrices (blocks).
 
-    The overall covariance matrix \Sigma is constructed by placing each block along the diagonal,
-    with all off-diagonal blocks being zero matrices.
+    The overall covariance matrix \Sigma is constructed by placing each block along the
+    diagonal, with all off-diagonal blocks being zero matrices.
 
     For example, given blocks B_1, B_2, \ldots, B_k, the block diagonal matrix \Sigma is:
 
@@ -542,8 +538,7 @@ class BlockDiagonal:
 
 
 def block_diag(*arrs):
-    """
-    Constructs a block diagonal matrix from the provided input arrays.
+    """Constructs a block diagonal matrix from the provided input arrays.
 
     If no arrays are provided, returns an empty 2D array.
 
@@ -593,14 +588,15 @@ def block_diag(*arrs):
 
 
 class MixtureModel:
-    """
-    Represents a mixture model consisting of multiple spectra, each weighted by a mixing proportion.
+    """Represents a mixture model consisting of multiple spectra, each weighted by a
+    mixing proportion.
 
     The mixture model \Sigma is defined as:
 
     \Sigma = \sum_{i=1}^{k} \pi_i \Sigma_i
 
-    where \Sigma_i are individual covariance matrices (spectra) and \pi_i are their corresponding mixing proportions.
+    where \Sigma_i are individual covariance matrices (spectra) and \pi_i are their
+    corresponding mixing proportions.
 
     Parameters
     ----------
@@ -656,8 +652,7 @@ class MixtureModel:
 
 
 class BlockCovarianceDesign(CovarianceDesign):
-    """
-    Constructs a block covariance matrix by composing multiple covariance designs.
+    """Constructs a block covariance matrix by composing multiple covariance designs.
 
     Each block within the block diagonal structure can have its own covariance characteristics,
     allowing for complex covariance structures composed of simpler sub-components.
@@ -686,8 +681,8 @@ class BlockCovarianceDesign(CovarianceDesign):
         Returns the total number of features across all blocks.
 
     spectrum() -> MixtureModel
-        Combines the spectra of all blocks into a single mixture model, adjusting mixing proportions
-        based on group sizes if `groups` is provided.
+        Combines the spectra of all blocks into a single mixture model, adjusting mixing
+        proportions based on group sizes if `groups` is provided.
     """
 
     def __init__(self, blocks: List[CovarianceDesign], groups: GroupedFeatures = None):
@@ -791,12 +786,12 @@ class BlockCovarianceDesign(CovarianceDesign):
 def simulate_rotated_design(
     cov: CovarianceDesign, n: int, rotated_measure: Callable = None
 ) -> np.ndarray:
-    """
-    Simulates a rotated design matrix based on the provided covariance design.
+    """Simulates a rotated design matrix based on the provided covariance design.
 
-    The simulation generates n samples from a multivariate distribution with covariance matrix \Sigma
-    specified by the `CovarianceDesign` instance. The rotation is achieved using the Cholesky decomposition
-    of \Sigma, i.e., \Sigma = LL^T, where L is a lower triangular matrix.
+    The simulation generates n samples from a multivariate distribution with covariance
+    matrix \Sigma specified by the `CovarianceDesign` instance. The rotation is achieved
+    using the Cholesky decomposition of \Sigma, i.e., \Sigma = LL^T, where L is a lower
+    triangular matrix.
 
     The simulated design matrix X is computed as:
 
@@ -807,7 +802,7 @@ def simulate_rotated_design(
     Parameters
     ----------
     cov : CovarianceDesign
-        An instance of CovarianceDesign defining \( \Sigma \).
+        An instance of CovarianceDesign defining \Sigma.
     n : int
         Number of samples to generate.
     rotated_measure : Callable, optional
@@ -816,12 +811,12 @@ def simulate_rotated_design(
     Returns
     -------
     numpy.ndarray
-        An \( n \times p \) simulated design matrix adhering to the covariance structure \( \Sigma \).
+        An n \times p simulated design matrix adhering to the covariance structure \Sigma.
 
     Raises
     ------
     ValueError
-        If \( \Sigma \) is not positive definite, making the Cholesky decomposition impossible.
+        If \Sigma is not positive definite, making the Cholesky decomposition impossible.
     TypeError
         If input types are incorrect.
 
@@ -846,15 +841,13 @@ def simulate_rotated_design(
 
     Sigma = cov.get_Sigma()
     if not isinstance(Sigma, np.ndarray):
-        raise TypeError("Covariance matrix \( \Sigma \) must be a numpy.ndarray.")
+        raise TypeError("Covariance matrix \Sigma must be a numpy.ndarray.")
     if Sigma.ndim != 2:
-        raise ValueError("Covariance matrix \( \Sigma \) must be 2-dimensional.")
+        raise ValueError("Covariance matrix \Sigma must be 2-dimensional.")
     if Sigma.shape[0] != Sigma.shape[1]:
-        raise ValueError("Covariance matrix \( \Sigma \) must be square.")
+        raise ValueError("Covariance matrix \Sigma must be square.")
     if np.any(np.isnan(Sigma)) or np.any(np.isinf(Sigma)):
-        raise ValueError(
-            "Covariance matrix \( \Sigma \) contains NaN or infinite values."
-        )
+        raise ValueError("Covariance matrix \Sigma contains NaN or infinite values.")
 
     try:
         Sigma_chol = np.linalg.cholesky(Sigma)
@@ -897,12 +890,13 @@ def simulate_rotated_design(
 
 
 def set_groups(design: CovarianceDesign, groups_or_p: Union[GroupedFeatures, int]):
-    """
-    Configures the number of features or feature groups for a given `CovarianceDesign` instance.
+    """Configures the number of features or feature groups for a given `CovarianceDesign`
+    instance.
 
-    This function allows setting the dimensionality either as a single integer (total number of features)
-    or as a `GroupedFeatures` instance that specifies groupings within the features. When provided
-    with group information, the covariance design adjusts its internal structure to accommodate the groups.
+    This function allows setting the dimensionality either as a single integer (total
+    number of features) or as a `GroupedFeatures` instance that specifies groupings
+    within the features. When provided with group information, the covariance design
+    adjusts its internal structure to accommodate the groups.
 
     Parameters
     ----------

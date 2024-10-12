@@ -28,6 +28,7 @@ def sample_data():
 
 
 def test_seagull_lasso_basic(sample_data):
+    """Test basic functionality of seagull_lasso."""
     result = seagull_lasso(**sample_data)
     assert isinstance(result, dict)
     assert "random_effects" in result
@@ -36,6 +37,7 @@ def test_seagull_lasso_basic(sample_data):
 
 
 def test_seagull_lasso_dimensions(sample_data):
+    """Test the dimensions of the output from seagull_lasso."""
     result = seagull_lasso(**sample_data)
     n, p = sample_data["X"].shape
     num_intervals = sample_data["num_intervals"]
@@ -45,6 +47,7 @@ def test_seagull_lasso_dimensions(sample_data):
 
 
 def test_seagull_lasso_fixed_effects(sample_data):
+    """Test seagull_lasso with fixed effects included."""
     sample_data["num_fixed_effects"] = 5
     result = seagull_lasso(**sample_data)
     assert "fixed_effects" in result
@@ -54,11 +57,13 @@ def test_seagull_lasso_fixed_effects(sample_data):
 
 
 def test_seagull_lasso_convergence(sample_data):
+    """Test convergence of iterations in seagull_lasso."""
     result = seagull_lasso(**sample_data)
     assert np.all(result["iterations"] <= sample_data["max_iterations"])
 
 
 def test_seagull_lasso_lambda_range(sample_data):
+    """Test that lambda values are within the specified range."""
     result = seagull_lasso(**sample_data)
     assert np.all(result["lambda"] <= sample_data["lambda_max"])
     assert np.all(
@@ -67,6 +72,7 @@ def test_seagull_lasso_lambda_range(sample_data):
 
 
 def test_seagull_lasso_trace_progress(sample_data, capsys):
+    """Test progress tracing during seagull_lasso execution."""
     sample_data["trace_progress"] = True
     seagull_lasso(**sample_data)
     captured = capsys.readouterr()
@@ -74,6 +80,7 @@ def test_seagull_lasso_trace_progress(sample_data, capsys):
 
 
 def test_seagull_lasso_zero_lambda(sample_data):
+    """Test seagull_lasso behavior with lambda_max set to zero."""
     sample_data["lambda_max"] = 0
     result = seagull_lasso(**sample_data)
     assert np.allclose(result["lambda"], 0)
@@ -89,6 +96,7 @@ def test_seagull_lasso_zero_lambda(sample_data):
 
 
 def test_seagull_lasso_large_lambda(sample_data):
+    """Test seagull_lasso behavior with a large lambda_max value."""
     sample_data["lambda_max"] = 1e6
     result = seagull_lasso(**sample_data)
     assert np.all(
@@ -97,6 +105,7 @@ def test_seagull_lasso_large_lambda(sample_data):
 
 
 def test_seagull_lasso_single_iteration(sample_data):
+    """Test seagull_lasso with a single interval."""
     sample_data["num_intervals"] = 1
     result = seagull_lasso(**sample_data)
     assert len(result["lambda"]) == 1
@@ -104,6 +113,7 @@ def test_seagull_lasso_single_iteration(sample_data):
 
 
 def test_seagull_lasso_input_validation(sample_data):
+    """Test input validation for seagull_lasso."""
     with pytest.raises(ValueError):
         invalid_data = sample_data.copy()
         invalid_data["X"] = invalid_data["X"][:, :-1]  # Mismatch dimensions

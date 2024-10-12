@@ -1,8 +1,8 @@
 """Solve Non-Negative Least Squares (NNLS) problems efficiently.
 
-This module implements robust algorithms for solving NNLS problems, which are 
-fundamental in various scientific and engineering disciplines. It provides 
-efficient solutions that adhere to non-negativity constraints, ensuring 
+This module implements robust algorithms for solving NNLS problems, which are
+fundamental in various scientific and engineering disciplines. It provides
+efficient solutions that adhere to non-negativity constraints, ensuring
 physically interpretable results.
 
 The module provides:
@@ -67,8 +67,7 @@ def nonneg_lsq(
     max_iter: Optional[int] = None,
     **kwargs,
 ) -> np.ndarray:
-    """
-    Solve the non-negative least squares problem.
+    """Solve the non-negative least squares problem.
 
     Solves the problem:
 
@@ -79,17 +78,20 @@ def nonneg_lsq(
     A : array-like of shape (n_samples, n_features)
         The input matrix A.
     B : array-like of shape (n_samples,) or (n_samples, n_targets)
-        The target matrix B. If B is a vector, it will be converted to a column matrix.
+        The target matrix B. If B is a vector, it will be converted to a column
+        matrix.
     alg : {'fnnls'}, default='fnnls'
         The algorithm to use. Currently only supports 'fnnls'.
     gram : bool, default=False
         If True, A and B are treated as Gram matrices (A^T A and A^T B).
     use_parallel : bool, default=False
-        If True and multiple CPUs are available, computations for multiple columns of B are parallelized.
+        If True and multiple CPUs are available, computations for multiple
+        columns of B are parallelized.
     tol : float, default=1e-8
         Tolerance for non-negativity constraints.
     max_iter : int, optional
-        Maximum number of iterations. If None, set to 30 * number of columns in A^T A.
+        Maximum number of iterations. If None, set to 30 * number of columns in
+        A^T A.
     **kwargs : dict
         Additional keyword arguments passed to the underlying algorithm.
 
@@ -152,19 +154,20 @@ def fnnls(
     max_iter: Optional[int] = None,
     **kwargs,
 ) -> np.ndarray:
-    """
-    Solve the non-negative least squares problem using the FNNLS algorithm.
+    """Solve the non-negative least squares problem using the FNNLS algorithm.
 
     Parameters
     ----------
     A : array-like of shape (n_samples, n_features)
         The input matrix A or Gram matrix A^T A if gram=True.
     B : array-like of shape (n_samples,) or (n_samples, n_targets)
-        The target matrix B or A^T B if gram=True. If B is a vector, it will be converted to a column matrix.
+        The target matrix B or A^T B if gram=True. If B is a vector, it will be
+        converted to a column matrix.
     gram : bool, default=False
         If True, A and B are treated as Gram matrices (A^T A and A^T B).
     use_parallel : bool, default=False
-        If True and multiple CPUs are available, computations for multiple columns of B are parallelized.
+        If True and multiple CPUs are available, computations for multiple
+        columns of B are parallelized.
     tol : float, default=1e-8
         Tolerance for non-negativity constraints.
     max_iter : int, optional
@@ -182,7 +185,8 @@ def fnnls(
     InvalidInputError
         If the input matrices are invalid or incompatible.
     ConvergenceError
-        If the algorithm fails to converge within the maximum number of iterations.
+        If the algorithm fails to converge within the maximum number of
+        iterations.
     """
     if B.ndim == 1:
         B = B[:, np.newaxis]
@@ -218,8 +222,7 @@ def fnnls(
 def fnnls_core(
     AtA: np.ndarray, Atb: np.ndarray, tol: float = 1e-8, max_iter: int = 300, **kwargs
 ) -> np.ndarray:
-    """
-    Core FNNLS algorithm to solve a single non-negative least squares problem.
+    """Core FNNLS algorithm to solve a single non-negative least squares problem.
 
     Parameters
     ----------
@@ -242,7 +245,8 @@ def fnnls_core(
     Raises
     ------
     ConvergenceError
-        If the algorithm fails to converge within the maximum number of iterations.
+        If the algorithm fails to converge within the maximum number of
+        iterations.
     """
     n = AtA.shape[0]
     x = np.zeros(n, dtype=AtA.dtype)

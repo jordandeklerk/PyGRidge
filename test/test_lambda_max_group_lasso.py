@@ -15,12 +15,14 @@ def sample_data():
 
 
 def test_basic_functionality(sample_data):
+    """Test basic functionality of lambda_max_group_lasso."""
     result = lambda_max_group_lasso(**sample_data)
     assert result > 0, "Lambda max should be positive"
     assert result < 10, "Lambda max should be less than 10 for this sample data"
 
 
 def test_different_input_sizes():
+    """Test lambda_max_group_lasso with different input sizes."""
     n, p = 10, 8
     y = np.random.rand(n)
     groups = np.random.randint(1, 4, p)
@@ -33,18 +35,21 @@ def test_different_input_sizes():
 
 
 def test_single_group(sample_data):
+    """Test lambda_max_group_lasso with a single group."""
     sample_data["groups"] = np.ones_like(sample_data["groups"])
     result = lambda_max_group_lasso(**sample_data)
     assert result > 0, "Lambda max should be positive for a single group"
 
 
 def test_all_zero_weights(sample_data):
+    """Test lambda_max_group_lasso when all feature weights are zero."""
     sample_data["feature_weights"] = np.zeros_like(sample_data["feature_weights"])
     result = lambda_max_group_lasso(**sample_data)
     assert result == 0, "Lambda max should be zero when all weights are zero"
 
 
 def test_numerical_stability():
+    """Test numerical stability of lambda_max_group_lasso with small weights."""
     n, p = 1000, 800
     y = np.random.rand(n)
     groups = np.random.randint(1, 11, p)
@@ -59,6 +64,7 @@ def test_numerical_stability():
 
 
 def test_input_validation():
+    """Test input validation for lambda_max_group_lasso."""
     # Test with mismatched input sizes
     result = lambda_max_group_lasso(
         np.array([1, 2]),
@@ -77,12 +83,14 @@ def test_input_validation():
 
 
 def test_result_consistency(sample_data):
+    """Test consistency of lambda_max_group_lasso results for the same input."""
     result1 = lambda_max_group_lasso(**sample_data)
     result2 = lambda_max_group_lasso(**sample_data)
     assert result1 == result2, "Lambda max should be consistent for the same input"
 
 
 def test_scale_invariance(sample_data):
+    """Test scale invariance of lambda_max_group_lasso."""
     result1 = lambda_max_group_lasso(**sample_data)
 
     # Scale the input
