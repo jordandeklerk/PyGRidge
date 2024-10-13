@@ -1,12 +1,4 @@
-"""
-This module provides functionality to compute the maximum lambda value for sparse
-group lasso regularization.
-
-It contains a single function, lambda_max_sparse_group_lasso, which calculates
-the largest lambda value that results in a non-zero solution for the sparse
-group lasso problem. This is useful for setting up a regularization path or for
-determining an appropriate range of lambda values for cross-validation.
-"""
+"""Compute the maximum lambda value for sparse group lasso regularization."""
 
 import numpy as np
 from seagull_bisection import seagull_bisection
@@ -20,42 +12,78 @@ def lambda_max_sparse_group_lasso(
     vector_beta: np.ndarray,
     matrix_x: np.ndarray,
 ) -> float:
-    """
-    Calculate the maximum value for the penalty parameter lambda in sparse group lasso.
+    r"""Calculate the maximum value for the penalty parameter :math:`\lambda` in sparse group lasso.
 
-    This function computes the maximum value for the penalty parameter lambda
-    in the sparse group lasso problem.
+    This function computes the maximum value for the penalty parameter :math:`\lambda`
+    in the sparse group lasso optimization problem, ensuring that all coefficients
+    are zero at this threshold.
 
     Parameters
     ----------
     alpha : float
-        Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
-        The penalty term is: alpha * "lasso penalty" + (1-alpha) * "group lasso penalty".
+        Mixing parameter of the penalty terms. Must satisfy :math:`0 < \alpha < 1`.
+        The penalty term is defined as:
+        :math:`\alpha \times \text{"lasso penalty"} + (1 - \alpha) \times \text{"group lasso penalty"}`.
     vector_y : ndarray of shape (n_samples,)
-        Vector of observations.
+        Vector of observations, :math:`\mathbf{y}`.
     vector_groups : ndarray of shape (n_features,)
-        Integer vector specifying group membership for each effect (fixed and random).
+        Integer vector specifying group membership for each effect (fixed and random), :math:`\mathbf{G}`.
     vector_weights_features : ndarray of shape (n_features,)
-        Vector of weights for the fixed and random effects [b^T, u^T]^T.
+        Vector of weights for the fixed and random effects, :math:`\mathbf{w}`.
     vector_beta : ndarray of shape (n_features,)
-        Vector of features. Random effects are initialized to zero,
-        fixed effects are initialized via least squares.
+        Vector of features, :math:`\boldsymbol{\beta}`. Random effects are initialized to zero,
+        and fixed effects are initialized via least squares.
     matrix_x : ndarray of shape (n_samples, n_features)
-        Design matrix relating y to fixed and random effects [X Z].
+        Design matrix relating :math:`\mathbf{y}` to fixed and random effects, :math:`\mathbf{X}`.
 
     Returns
     -------
     float
-        The maximum value for the penalty parameter lambda.
+        The maximum value for the penalty parameter :math:`\lambda`.
 
     Notes
     -----
     The sparse group lasso penalty is a combination of the lasso and group lasso penalties:
 
-    P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+    .. math::
+        P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \|\boldsymbol{\beta}_g\|_2
 
-    where beta_j are individual coefficients and beta_g are groups of coefficients.
+    where:
+    - :math:`\beta_j` are individual coefficients,
+    - :math:`\boldsymbol{\beta}_g` are groups of coefficients,
+    - :math:`\alpha` is the mixing parameter balancing lasso and group lasso penalties.
+
+    The computation involves the following steps:
+    1. Initialize variables specific to groups with unpenalized features.
+    2. Handle unpenalized features if present.
+    3. Scale :math:`\mathbf{X}^T \mathbf{r}` with weights and sample size.
+    4. Determine :math:`\lambda_{\text{max}}` using a bisection method and apply a numeric correction factor.
+
+    The formula for :math:`\lambda_{\text{max}}` is:
+
+    .. math::
+        \lambda_{\text{max}} = \max_{g} \lambda_g
+
+    where each :math:`\lambda_g` for group :math:`g` is determined by:
+
+    .. math::
+        \lambda_g = \text{seagull\_bisection}\left(
+            |\mathbf{G}_g|, \alpha, \text{left\_border}, \text{right\_border},
+            w_g, \mathbf{w}_g, \frac{\mathbf{X}_g^T \mathbf{r}}{n}
+        \right)
+
+    Here:
+    - :math:`|\mathbf{G}_g|` is the size of group :math:`g`,
+    - :math:`w_g` is the weight for group :math:`g`,
+    - :math:`\mathbf{w}_g` are the weights for features in group :math:`g`,
+    - :math:`\mathbf{X}_g` is the submatrix of :math:`\mathbf{X}` corresponding to group :math:`g`,
+    - :math:`\mathbf{r}` is the residual vector,
+    - and :math:`n` is the number of samples.
+
+    The `seagull_bisection` function is used to solve for :math:`\lambda_g` within specified borders.
+
     """
+
     n, p = matrix_x.shape
     number_groups = np.max(vector_groups)
     number_zeros_weights = np.sum(vector_weights_features == 0)
@@ -77,13 +105,22 @@ def lambda_max_sparse_group_lasso(
     if number_zeros_weights > 0:
         active_mask = vector_weights_features == 0
         matrix_x_active = matrix_x[:, active_mask]
+
+        # Solve for beta_active in y = X_active * beta_active
         vector_beta_active = np.linalg.solve(
             matrix_x_active.T @ matrix_x_active, matrix_x_active.T @ vector_y
         )
+
+        # Update beta with beta_active
         vector_beta[active_mask] = vector_beta_active
+
+        # Calculate residual_active = y - X_active * beta_active
         vector_residual_active = vector_y - matrix_x_active @ vector_beta_active
+
+        # Calculate X^T * residual_active
         vector_x_transp_residual_active = matrix_x.T @ vector_residual_active
     else:
+        # Treatment if only penalized features are involved
         vector_x_transp_residual_active = matrix_x.T @ vector_y
 
     vector_max_groups = np.zeros(number_groups)

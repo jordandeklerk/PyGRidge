@@ -1,45 +1,50 @@
-"""
-This module provides functionality to compute the maximum lambda value for LASSO
-regularization.
-
-It contains a single function, lambda_max_lasso, which calculates the largest
-lambda value that results in a non-zero solution for the LASSO problem. This is
-useful for setting up a regularization path or for determining an appropriate
-range of lambda values for cross-validation.
-"""
+"""Compute the maximum lambda value for LASSO regularization."""
 
 import numpy as np
 
 
 def lambda_max_lasso(y, feature_weights, beta, X):
-    """Compute the maximal lambda for LASSO regression.
+    r"""Compute the maximal lambda for LASSO regression.
+
+    The maximal lambda value is the smallest value for which all coefficients become zero
+    in the LASSO optimization problem.
 
     Parameters
     ----------
     y : array-like of shape (n_samples,)
-        Target vector.
+        Target vector, :math:`\mathbf{y}`.
     feature_weights : array-like of shape (n_features,)
-        Weights for the feature vector [b^T, u^T]^T. The entries may be permuted
+        Weights for the feature vector :math:`\mathbf{w}`. The entries may be permuted
         corresponding to their group assignments.
     beta : array-like of shape (n_features,)
-        Feature vector. Random effects are initialized to zero, fixed effects
-        are initialized via least squares.
+        Feature vector, :math:`\boldsymbol{\beta}`. Random effects are initialized to zero,
+        fixed effects are initialized via least squares.
     X : array-like of shape (n_samples, n_features)
-        Design matrix [X Z] relating y to fixed and random effects.
+        Design matrix :math:`\mathbf{X}` relating :math:`\mathbf{y}` to fixed and random effects.
 
     Returns
     -------
     float
-        The maximal lambda value for LASSO regression.
+        The maximal lambda value for LASSO regression, :math:`\lambda_{\text{max}}`.
 
     Notes
     -----
     The maximal lambda is computed as:
 
-    lambda_max = max_i |X_i^T r| / (n w_i)
+    .. math::
+        \lambda_{\text{max}} = \frac{\max_i \left| \mathbf{X}_i^T \mathbf{r} \right|}{n w_i}
 
-    where X_i is the i-th column of X, r is the residual, n is the number of
-    samples, and w_i is the weight for feature i.
+    where:
+    - :math:`\mathbf{X}_i` is the :math:`i`-th column of :math:`\mathbf{X}`,
+    - :math:`\mathbf{r}` is the residual vector,
+    - :math:`n` is the number of samples,
+    - and :math:`w_i` is the weight for feature :math:`i`.
+
+    The computation involves the following steps:
+    1. Initialize variables specific to groups with unpenalized features.
+    2. Handle unpenalized features if present.
+    3. Scale :math:`\mathbf{X}^T \mathbf{r}` with weights and sample size.
+    4. Determine :math:`\lambda_{\text{max}}` and apply a numeric correction factor.
     """
     n, p = X.shape
 
@@ -64,13 +69,13 @@ def lambda_max_lasso(y, feature_weights, beta, X):
         # Calculate residual_active = y - X_active * beta_active
         residual_active = y - X_active @ beta_active
 
-        # Calculate t(X) * residual_active
+        # Calculate X^T * residual_active
         x_transp_residual_active = X.T @ residual_active
     else:
         # Treatment if only penalized features are involved
         x_transp_residual_active = X.T @ y
 
-    # Scale t(X)*residual_active with weight*n, if weight>0
+    # Scale X^T * residual_active with weight * n, if weight > 0
     mask = feature_weights > 0
     x_transp_residual_active[mask] /= feature_weights[mask] * n
     x_transp_residual_active[~mask] = 0

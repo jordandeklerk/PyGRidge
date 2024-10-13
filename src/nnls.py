@@ -1,29 +1,4 @@
-"""Solve Non-Negative Least Squares (NNLS) problems efficiently.
-
-This module implements robust algorithms for solving NNLS problems, which are
-fundamental in various scientific and engineering disciplines. It provides
-efficient solutions that adhere to non-negativity constraints, ensuring
-physically interpretable results.
-
-The module provides:
-
-1. Core NNLS functions:
-   - nonneg_lsq: Main entry point for solving NNLS problems.
-   - fnnls: Implements the Fast Non-Negative Least Squares algorithm.
-   - fnnls_core: Core implementation of the FNNLS algorithm for a single problem.
-
-2. Custom exceptions:
-   - NNLSError: Base exception for NNLS-related errors.
-   - InvalidInputError: For invalid or incompatible input matrices.
-   - ConvergenceError: When the algorithm fails to converge.
-
-Main features:
-- Flexible input handling for standard and Gram matrix inputs.
-- Optional parallelization for multi-column target matrices.
-- Configurable parameters for fine-tuning algorithm behavior.
-- Comprehensive error checking and informative error messages.
-"""
-
+"""Solve Non-Negative Least Squares (NNLS) problems efficiently."""
 
 import numpy as np
 from typing import Union, Optional
@@ -67,38 +42,36 @@ def nonneg_lsq(
     max_iter: Optional[int] = None,
     **kwargs,
 ) -> np.ndarray:
-    """Solve the non-negative least squares problem.
+    r"""Solve the non-negative least squares (NNLS) problem.
 
-    Solves the problem:
+    Solves the optimization problem:
 
-    minimize ||A X - B||_2^2 subject to X >= 0
+    .. math::
+        \min_{\mathbf{X}} \| \mathbf{A} \mathbf{X} - \mathbf{B} \|_2^2 \quad \text{subject to} \quad \mathbf{X} \geq 0
 
     Parameters
     ----------
     A : array-like of shape (n_samples, n_features)
-        The input matrix A.
+        The input matrix :math:`\mathbf{A}`.
     B : array-like of shape (n_samples,) or (n_samples, n_targets)
-        The target matrix B. If B is a vector, it will be converted to a column
-        matrix.
+        The target matrix :math:`\mathbf{B}`. If :math:`\mathbf{B}` is a vector, it will be converted to a column matrix.
     alg : {'fnnls'}, default='fnnls'
-        The algorithm to use. Currently only supports 'fnnls'.
+        The algorithm to use. Currently, only 'fnnls' is supported.
     gram : bool, default=False
-        If True, A and B are treated as Gram matrices (A^T A and A^T B).
+        If True, :math:`\mathbf{A}` and :math:`\mathbf{B}` are treated as Gram matrices (:math:`\mathbf{A}^T \mathbf{A}` and :math:`\mathbf{A}^T \mathbf{B}`).
     use_parallel : bool, default=False
-        If True and multiple CPUs are available, computations for multiple
-        columns of B are parallelized.
+        If True and multiple CPUs are available, computations for multiple columns of :math:`\mathbf{B}` are parallelized.
     tol : float, default=1e-8
         Tolerance for non-negativity constraints.
     max_iter : int, optional
-        Maximum number of iterations. If None, set to 30 * number of columns in
-        A^T A.
+        Maximum number of iterations. If None, set to :math:`30 \times` number of columns in :math:`\mathbf{A}^T \mathbf{A}`.
     **kwargs : dict
         Additional keyword arguments passed to the underlying algorithm.
 
     Returns
     -------
     X : ndarray of shape (n_features, n_targets)
-        Solution matrix X that minimizes ||A X - B||_2 subject to X >= 0.
+        Solution matrix :math:`\mathbf{X}` that minimizes :math:`\| \mathbf{A} \mathbf{X} - \mathbf{B} \|_2` subject to :math:`\mathbf{X} \geq 0`.
 
     Raises
     ------
@@ -127,8 +100,7 @@ def nonneg_lsq(
 
     if gram and A.shape[0] != B.shape[0]:
         raise InvalidInputError(
-            f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has"
-            f" {B.shape[0]} rows."
+            f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has {B.shape[0]} rows."
         )
 
     if alg == "fnnls":
@@ -154,39 +126,36 @@ def fnnls(
     max_iter: Optional[int] = None,
     **kwargs,
 ) -> np.ndarray:
-    """Solve the non-negative least squares problem using the FNNLS algorithm.
+    r"""Solve the non-negative least squares (NNLS) problem using the Fast NNLS (FNNLS) algorithm.
 
     Parameters
     ----------
     A : array-like of shape (n_samples, n_features)
-        The input matrix A or Gram matrix A^T A if gram=True.
+        The input matrix :math:`\mathbf{A}` or Gram matrix :math:`\mathbf{A}^T \mathbf{A}` if `gram=True`.
     B : array-like of shape (n_samples,) or (n_samples, n_targets)
-        The target matrix B or A^T B if gram=True. If B is a vector, it will be
-        converted to a column matrix.
+        The target matrix :math:`\mathbf{B}` or :math:`\mathbf{A}^T \mathbf{B}` if `gram=True`. If :math:`\mathbf{B}` is a vector, it will be converted to a column matrix.
     gram : bool, default=False
-        If True, A and B are treated as Gram matrices (A^T A and A^T B).
+        If True, :math:`\mathbf{A}` and :math:`\mathbf{B}` are treated as Gram matrices (:math:`\mathbf{A}^T \mathbf{A}` and :math:`\mathbf{A}^T \mathbf{B}`).
     use_parallel : bool, default=False
-        If True and multiple CPUs are available, computations for multiple
-        columns of B are parallelized.
+        If True and multiple CPUs are available, computations for multiple columns of :math:`\mathbf{B}` are parallelized.
     tol : float, default=1e-8
         Tolerance for non-negativity constraints.
     max_iter : int, optional
-        Maximum number of iterations. If None, set to 30 * number of variables.
+        Maximum number of iterations. If None, set to :math:`30 \times` number of variables.
     **kwargs : dict
         Additional keyword arguments passed to the core FNNLS algorithm.
 
     Returns
     -------
     X : ndarray of shape (n_features, n_targets)
-        Solution matrix X that minimizes ||A X - B||_2 subject to X >= 0.
+        Solution matrix :math:`\mathbf{X}` that minimizes :math:`\| \mathbf{A} \mathbf{X} - \mathbf{B} \|_2` subject to :math:`\mathbf{X} \geq 0`.
 
     Raises
     ------
     InvalidInputError
         If the input matrices are invalid or incompatible.
     ConvergenceError
-        If the algorithm fails to converge within the maximum number of
-        iterations.
+        If the algorithm fails to converge within the maximum number of iterations.
     """
     if B.ndim == 1:
         B = B[:, np.newaxis]
@@ -222,14 +191,14 @@ def fnnls(
 def fnnls_core(
     AtA: np.ndarray, Atb: np.ndarray, tol: float = 1e-8, max_iter: int = 300, **kwargs
 ) -> np.ndarray:
-    """Core FNNLS algorithm to solve a single non-negative least squares problem.
+    r"""Core Fast Non-Negative Least Squares (FNNLS) algorithm to solve a single NNLS problem.
 
     Parameters
     ----------
     AtA : array-like of shape (n_features, n_features)
-        The Gram matrix A^T A.
+        The Gram matrix :math:`\mathbf{A}^T \mathbf{A}`.
     Atb : array-like of shape (n_features,)
-        The product A^T b.
+        The product :math:`\mathbf{A}^T \mathbf{b}`.
     tol : float, default=1e-8
         Tolerance for non-negativity constraints.
     max_iter : int, default=300
@@ -240,13 +209,12 @@ def fnnls_core(
     Returns
     -------
     x : ndarray of shape (n_features,)
-        Solution vector x that minimizes ||A x - b||_2 subject to x >= 0.
+        Solution vector :math:`\mathbf{x}` that minimizes :math:`\| \mathbf{A} \mathbf{x} - \mathbf{b} \|_2` subject to :math:`\mathbf{x} \geq 0`.
 
     Raises
     ------
     ConvergenceError
-        If the algorithm fails to converge within the maximum number of
-        iterations.
+        If the algorithm fails to converge within the maximum number of iterations.
     """
     n = AtA.shape[0]
     x = np.zeros(n, dtype=AtA.dtype)

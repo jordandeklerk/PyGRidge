@@ -1,33 +1,16 @@
-"""Create and manage grouped feature structures for statistical modeling.
+"""Create and manage grouped feature structures for statistical modeling."""
 
-This module implements a flexible system for handling grouped features,
-particularly useful in scenarios involving multi-modal data, categorical
-variables, or time series with repeated measurements.
-
-The module provides:
-
-- GroupedFeatures class: Represents collections of features organized into groups.
-- Utility functions: For creating filled lists.
-
-Main features:
-- Flexible group creation and manipulation.
-- Efficient indexing and summarization of grouped data.
-- Support for both list and numpy.ndarray inputs.
-- Comprehensive error checking with informative messages.
-"""
-
-from typing import List, Callable, Union, TypeVar
+from typing import Callable, Union, TypeVar
 import numpy as np
 
 T = TypeVar("T")
 
 
 class GroupedFeatures:
-    """
-    A class representing groups of features.
+    r"""A class representing groups of features.
 
-    The first `ps[0]` features are one group, the next `ps[1]` features are the
-    second group and so forth.
+    The first :math:`ps[0]` features are one group, the next :math:`ps[1]` features are the
+    second group, and so forth.
 
     Parameters
     ----------
@@ -39,19 +22,19 @@ class GroupedFeatures:
     ps : list of int
         List of group sizes.
     p : int
-        Total number of features.
+        Total number of features, calculated as :math:`p = \sum ps`.
     num_groups : int
-        Number of groups.
+        Number of groups, denoted as :math:`G`.
 
     Raises
     ------
     TypeError
-        If ps is not a list or contains non-integer elements.
+        If `ps` is not a list or contains non-integer elements.
     ValueError
         If any group size is not positive.
     """
 
-    def __init__(self, ps: List[int]):
+    def __init__(self, ps: list[int]):
         if not isinstance(ps, list):
             raise TypeError(
                 f"ps must be a list of positive integers, got {type(ps).__name__}"
@@ -67,8 +50,9 @@ class GroupedFeatures:
 
     @classmethod
     def from_group_size(cls, group_size: int, num_groups: int):
-        """
-        Create a GroupedFeatures instance with uniform group sizes.
+        r"""Create a `GroupedFeatures` instance with uniform group sizes.
+
+        The group sizes are all set to :math:`group\_size`.
 
         Parameters
         ----------
@@ -85,9 +69,9 @@ class GroupedFeatures:
         Raises
         ------
         TypeError
-            If group_size or num_groups is not an integer.
+            If `group_size` or `num_groups` is not an integer.
         ValueError
-            If group_size or num_groups is not positive.
+            If `group_size` or `num_groups` is not positive.
         """
         if not isinstance(group_size, int):
             raise TypeError(
@@ -105,30 +89,28 @@ class GroupedFeatures:
         return cls([group_size] * num_groups)
 
     def ngroups(self) -> int:
-        """
-        Get the number of groups.
+        r"""Get the number of groups.
 
         Returns
         -------
         int
-            Number of groups.
+            Number of groups, :math:`G`.
         """
         return self.num_groups
 
     def nfeatures(self) -> int:
-        """
+        r"""
         Get the total number of features.
 
         Returns
         -------
         int
-            Total number of features.
+            Total number of features, :math:`p`.
         """
         return self.p
 
     def group_idx(self, i: int) -> range:
-        """
-        Get the range of feature indices for the i-th group.
+        r"""Get the range of feature indices for the :math:`i`-th group.
 
         Parameters
         ----------
@@ -143,9 +125,9 @@ class GroupedFeatures:
         Raises
         ------
         TypeError
-            If i is not an integer.
+            If `i` is not an integer.
         IndexError
-            If i is out of range [0, num_groups - 1].
+            If `i` is out of range [0, :math:`num\_groups - 1`].
         """
         if not isinstance(i, int):
             raise TypeError(f"Group index i must be an integer, got {type(i).__name__}")
@@ -160,11 +142,13 @@ class GroupedFeatures:
 
     def group_summary(
         self,
-        vec: Union[List[T], np.ndarray],
-        f: Callable[[Union[List[T], np.ndarray]], T],
-    ) -> List[T]:
-        """
-        Apply a summary function to each group of features.
+        vec: Union[list[T], np.ndarray],
+        f: Callable[[Union[list[T], np.ndarray]], T],
+    ) -> list[T]:
+        r"""Apply a summary function to each group of features.
+
+        For each group :math:`g`, the function :math:`f` is applied to the subset of
+        features in that group.
 
         Parameters
         ----------
@@ -182,9 +166,9 @@ class GroupedFeatures:
         Raises
         ------
         TypeError
-            If vec is neither a list nor an ndarray, or if f is not callable.
+            If `vec` is neither a list nor an ndarray, or if `f` is not callable.
         ValueError
-            If length of vec does not match total number of features.
+            If length of `vec` does not match total number of features.
         """
         if not callable(f):
             raise TypeError("f must be a callable function")
@@ -233,11 +217,11 @@ class GroupedFeatures:
 
         return summaries
 
-    def group_expand(self, vec_or_num: Union[List[T], T, np.ndarray]) -> List[T]:
-        """
+    def group_expand(self, vec_or_num: Union[list[T], T, np.ndarray]) -> list[T]:
+        r"""
         Expand a vector or number to a list of features.
 
-        If vec_or_num is a number, replicate it across all features.
+        If `vec_or_num` is a number, replicate it across all features.
         If it is a list or ndarray, each element corresponds to a group and is
         replicated within the group.
 
@@ -255,9 +239,9 @@ class GroupedFeatures:
         Raises
         ------
         TypeError
-            If vec_or_num is neither a number nor a list/ndarray.
+            If `vec_or_num` is neither a number nor a list/ndarray.
         ValueError
-            If vec_or_num is a list/ndarray but its length does not match number
+            If `vec_or_num` is a list/ndarray but its length does not match number
             of groups.
         """
         if isinstance(vec_or_num, (int, float)):
@@ -284,9 +268,8 @@ class GroupedFeatures:
         )
 
 
-def fill(value: T, length: int) -> List[T]:
-    """
-    Fill a list with a given value repeated length times.
+def fill(value: T, length: int) -> list[T]:
+    """Fill a list with a given value repeated :math:`length` times.
 
     Parameters
     ----------
@@ -298,14 +281,14 @@ def fill(value: T, length: int) -> List[T]:
     Returns
     -------
     list
-        List containing the value repeated length times.
+        List containing the value repeated :math:`length` times.
 
     Raises
     ------
     TypeError
-        If length is not an integer.
+        If `length` is not an integer.
     ValueError
-        If length is negative.
+        If `length` is negative.
     """
     if not isinstance(length, int):
         raise TypeError(f"length must be an integer, got {type(length).__name__}")

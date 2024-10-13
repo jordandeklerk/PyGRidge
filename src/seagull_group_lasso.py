@@ -1,12 +1,4 @@
-"""
-This module implements the seagull group lasso algorithm for solving Lasso,
-group lasso, and sparse-group lasso problems.
-
-It provides a single function, seagull_group_lasso, which performs the
-optimization using coordinate descent with soft-thresholding. The algorithm
-supports various penalty terms and can handle fixed and random effects in
-mixed models.
-"""
+"""Seagull group lasso algorithm for solving Lasso, group lasso, and sparse-group lasso problems."""
 
 import numpy as np
 
@@ -27,81 +19,120 @@ def seagull_group_lasso(
     num_fixed_effects: int,
     trace_progress: bool,
 ) -> dict:
-    """Perform Lasso, group lasso, and sparse-group lasso regression.
+    r"""Perform Lasso, group lasso, and sparse-group lasso regression.
 
-    This function implements the seagull group lasso algorithm for solving
-    Lasso, group lasso, and sparse-group lasso problems.
+    This function implements the Seagull group lasso algorithm for solving
+    Lasso, group lasso, and sparse-group lasso optimization problems.
+
+    The optimization problem is defined as:
+
+    .. math::
+        \min_{\boldsymbol{\beta}} \frac{1}{2n} \| \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \|_2^2 + \lambda P(\boldsymbol{\beta})
+
+    where the penalty term :math:`P(\boldsymbol{\beta})` can be:
+    - Lasso: :math:`P(\boldsymbol{\beta}) = \sum_{j} |\beta_j|`
+    - Group Lasso: :math:`P(\boldsymbol{\beta}) = \sum_{g} \| \boldsymbol{\beta}_g \|_2`
+    - Sparse Group Lasso: :math:`P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \| \boldsymbol{\beta}_g \|_2`
+
+    where:
+    - :math:`\boldsymbol{\beta}_g` represents the coefficients in group :math:`g`,
+    - :math:`\alpha` is the mixing parameter balancing Lasso and Group Lasso penalties.
 
     Parameters
     ----------
     y : ndarray of shape (n_samples,)
-        Numeric vector of observations.
+        Numeric vector of observations, :math:`\mathbf{y}`.
     X : ndarray of shape (n_samples, n_features)
-        Numeric design matrix relating y to fixed and random effects [X Z].
+        Numeric design matrix relating :math:`\mathbf{y}` to fixed and random effects, :math:`\mathbf{X}`.
     feature_weights : ndarray of shape (n_features,)
-        Numeric vector of weights for the vectors of fixed and random effects
-        [b^T, u^T]^T.
+        Numeric vector of weights for the vectors of fixed and random effects,
+        :math:`\mathbf{w}`.
     groups : ndarray of shape (n_features,)
         Integer vector specifying which effect (fixed and random) belongs to
-        which group.
+        which group, :math:`\mathbf{G}`.
     beta : ndarray of shape (n_features,)
-        Numeric vector whose partitions will be returned.
+        Numeric vector of coefficients, :math:`\boldsymbol{\beta}`.
     index_permutation : ndarray of shape (n_features,)
         Integer vector that contains information about the original order of
-        the user's input.
+        the user's input, :math:`\mathbf{\pi}`.
     epsilon_convergence : float
-        Value for relative accuracy of the solution.
+        Value for relative accuracy of the solution, :math:`\epsilon`.
     max_iterations : int
-        Maximum number of iterations for each value of the penalty parameter λ.
+        Maximum number of iterations for each value of the penalty parameter :math:`\lambda`.
     gamma : float
         Multiplicative parameter to decrease the step size during backtracking
-        line search.
+        line search, :math:`\gamma`.
     lambda_max : float
-        Maximum value for the penalty parameter.
+        Maximum value for the penalty parameter, :math:`\lambda_{\text{max}}`.
     proportion_xi : float
-        Multiplicative parameter to determine the minimum value of λ for the
-        grid search.
+        Multiplicative parameter to determine the minimum value of :math:`\lambda` for the
+        grid search, :math:`\xi`.
     num_intervals : int
-        Number of lambdas for the grid search.
+        Number of lambdas for the grid search, :math:`m`.
     num_fixed_effects : int
-        Number of fixed effects present in the mixed model.
+        Number of fixed effects present in the mixed model, :math:`p`.
     trace_progress : bool
-        If True, a message will occur on the screen after each finished loop
-        of the λ grid.
+        If True, a message will appear on the screen after each finished loop
+        of the :math:`\lambda` grid.
 
     Returns
     -------
     dict
         A dictionary containing the results of the group lasso algorithm.
         Keys include:
-        - 'random_effects': ndarray of shape (num_intervals, n_features) or
+        - `'random_effects'`: ndarray of shape (num_intervals, n_features) or
           (num_intervals, n_features - num_fixed_effects)
-        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects)
-          (only if num_fixed_effects > 0)
-        - 'lambda': ndarray of shape (num_intervals,)
-        - 'iterations': ndarray of shape (num_intervals,)
-        - 'rel_acc': float
-        - 'max_iter': int
-        - 'gamma_bls': float
-        - 'xi': float
-        - 'loops_lambda': int
+        - `'fixed_effects'`: ndarray of shape (num_intervals, num_fixed_effects)`
+          (only if `num_fixed_effects` > 0)
+        - `'lambda'`: ndarray of shape (num_intervals,)
+        - `'iterations'`: ndarray of shape (num_intervals,)
+        - `'rel_acc'`: float
+        - `'max_iter'`: int
+        - `'gamma_bls'`: float
+        - `'xi'`: float
+        - `'loops_lambda'`: int
+
+    Raises
+    ------
+    ValueError
+        If any of the input parameters are invalid, such as mismatched dimensions
+        or invalid parameter ranges.
 
     Notes
     -----
-    The algorithm solves the optimization problem:
+    The Seagull group lasso algorithm solves the optimization problem:
 
-    min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
+    .. math::
+        \min_{\boldsymbol{\beta}} \frac{1}{2n} \| \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \|_2^2 + \lambda P(\boldsymbol{\beta})
 
-    where P(beta) is the penalty term, which can be:
-    - Lasso: sum_j |beta_j|
-    - Group Lasso: sum_g ||beta_g||_2
-    - Sparse Group Lasso: alpha * sum_j |beta_j| + (1-alpha) * sum_g
-      ||beta_g||_2
+    where the penalty term :math:`P(\boldsymbol{\beta})` can be configured to perform:
+    - **Lasso Regression** by setting :math:`P(\boldsymbol{\beta}) = \sum_{j} |\beta_j|`
+    - **Group Lasso Regression** by setting :math:`P(\boldsymbol{\beta}) = \sum_{g} \| \boldsymbol{\beta}_g \|_2`
+    - **Sparse Group Lasso Regression** by setting
+      :math:`P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \| \boldsymbol{\beta}_g \|_2`
 
-    The algorithm uses a coordinate descent approach with soft-thresholding
+    The algorithm employs a coordinate descent approach with soft-thresholding
     for the Lasso penalty and group soft-thresholding for the Group Lasso
-    penalty.
+    penalty. It iteratively updates the coefficients :math:`\boldsymbol{\beta}` to minimize the
+    objective function while enforcing the non-negativity constraints.
+
+    The grid search over :math:`\lambda` values is performed logarithmically,
+    spanning from :math:`\lambda_{\text{max}}` down to :math:`\xi \times \lambda_{\text{max}}` with
+    :math:`m` intervals.
+
+    The `proportion_xi` parameter determines the lower bound of the grid search,
+    ensuring that the algorithm explores a range of penalty strengths to find
+    an optimal balance between sparsity and group structure in the coefficients.
+
+    The `gamma` parameter controls the step size reduction during backtracking
+    line search to ensure convergence and numerical stability.
+
+    The results include the estimated fixed and random effects, the
+    corresponding :math:`\lambda` values, the number of iterations
+    required for convergence, and other diagnostic information.
+
     """
+
     n, p = X.shape
 
     # Initialize variables
@@ -111,8 +142,7 @@ def seagull_group_lasso(
     group_sizes = np.zeros(num_groups, dtype=int)
     group_weights = np.zeros(num_groups)
 
-    # Create vectors of group sizes, start indices, end indices, and group
-    # weights
+    # Create vectors of group sizes, start indices, end indices, and group weights
     for i in range(num_groups):
         group_mask = groups == (i + 1)
         group_sizes[i] = np.sum(group_mask)
@@ -140,7 +170,7 @@ def seagull_group_lasso(
 
         while (not accuracy_reached) and (counter <= max_iterations):
             # Calculate gradient
-            gradient = (X.T @ (X @ beta) - X_transp_y) / n
+            gradient = (X.T @ beta - X_transp_y) / n
 
             criterion_fulfilled = False
             time_step = 1.0

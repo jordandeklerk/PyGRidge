@@ -1,11 +1,4 @@
-"""
-This module implements a bisection algorithm for finding the smallest positive
-root of a polynomial.
-
-The main function, seagull_bisection, is used in sparse group lasso optimization
-to find the root of a specific polynomial arising from the proximal operator
-calculation.
-"""
+"""Bisection algorithm for finding the smallest positive root of a polynomial."""
 
 import numpy as np
 
@@ -23,36 +16,32 @@ def seagull_bisection(
     vector_weights: np.ndarray,
     vector_in: np.ndarray,
 ) -> float:
-    """Internal bisection algorithm for finding the smallest positive root of a
-    polynomial.
+    r"""Internal bisection algorithm for finding the smallest positive root of a polynomial.
 
-    This algorithm finds the smallest positive root of a polynomial of second
-    degree in lambda. Bisection is an implicit algorithm, i.e., it calls itself
-    until a certain precision is reached.
+    This algorithm finds the smallest positive root of a polynomial of second degree in
+    :math:`\lambda`. Bisection is an implicit algorithm, i.e., it calls itself until a
+    certain precision is reached.
 
     Parameters
     ----------
     rows : int
-        The length of the input vectors.
+        The length of the input vectors, :math:`n`.
     alpha : float
-        Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
-        The penalty term is: alpha * "lasso penalty" + (1-alpha) * "group lasso
-        penalty".
+        Mixing parameter of the penalty terms. Must satisfy :math:`0 < \alpha < 1`.
+        The penalty term is defined as:
+        :math:`\alpha \times \text{"lasso penalty"} + (1 - \alpha) \times \text{"group lasso penalty"}`.
     left_border : float
-        Value of the left border of the current interval that for sure harbors
-        a root.
+        Value of the left border of the current interval that for sure harbors a root, :math:`\lambda_{\text{left}}`.
     right_border : float
-        Value of the right border of the current interval that for sure harbors
-        a root.
+        Value of the right border of the current interval that for sure harbors a root, :math:`\lambda_{\text{right}}`.
     group_weight : float
-        A multiplicative scalar which is part of the polynomial.
+        A multiplicative scalar which is part of the polynomial, :math:`g`.
     vector_weights : ndarray of shape (rows,)
-        An input vector of multiplicative scalars which are part of the
-        polynomial. This vector is a subset of the vector of weights for
-        features.
+        An input vector of multiplicative scalars which are part of the polynomial,
+        :math:`\mathbf{w}`. This vector is a subset of the vector of weights for features.
     vector_in : ndarray of shape (rows,)
-        Another input vector which is required to compute the value of the
-        polynomial.
+        Another input vector which is required to compute the value of the polynomial,
+        :math:`\mathbf{x}`.
 
     Returns
     -------
@@ -63,9 +52,9 @@ def seagull_bisection(
     Raises
     ------
     ValueError
-        If alpha is not between 0 and 1 (exclusive), if left_border is greater
-        than or equal to right_border, or if the lengths of vector_weights and
-        vector_in do not match the specified number of rows.
+        If :math:`\alpha` is not between 0 and 1 (exclusive), if :math:`\text{left\_border}` is greater
+        than or equal to :math:`\text{right\_border}`, or if the lengths of `vector_weights` and
+        `vector_in` do not match the specified number of rows.
     RuntimeError
         If the bisection algorithm does not converge after the maximum number
         of iterations.
@@ -74,12 +63,19 @@ def seagull_bisection(
     -----
     The algorithm uses a bisection method to find the root of the polynomial:
 
-    f(lambda) = sum_i max(0, |x_i| - alpha * lambda * w_i)^2 - (1-alpha)^2 *
-    lambda^2 * g
+    .. math::
+        f(\lambda) = \sum_{i=1}^{n} \left( \max\left(0, |\mathbf{x}_i| - \alpha \lambda \mathbf{w}_i\right) \right)^2 - (1 - \alpha)^2 \lambda^2 g
 
-    where x_i are the elements of vector_in, w_i are the elements of
-    vector_weights, and g is the group_weight.
+    where:
+    - :math:`\mathbf{x}_i` are the elements of `vector_in`,
+    - :math:`\mathbf{w}_i` are the elements of `vector_weights`,
+    - :math:`g` is the `group_weight`,
+    - and :math:`\lambda` is the variable for which the root is sought.
+
+    The algorithm iteratively narrows down the interval containing the root by evaluating
+    the function at the midpoint and adjusting the borders based on the sign change.
     """
+
     # Input validation
     if not (0 < alpha < 1):
         raise ValueError("Alpha must be between 0 and 1 (exclusive)")

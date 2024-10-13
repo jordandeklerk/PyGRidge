@@ -1,6 +1,5 @@
 """Regression estimators based on group ridge regression."""
 
-
 from abc import ABC, abstractmethod
 from typing import Union, TypeVar
 import numpy as np

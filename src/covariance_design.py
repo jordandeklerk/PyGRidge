@@ -1,6 +1,5 @@
 """Create covariance matrix designs for various statistical models."""
 
-
 from abc import ABC, abstractmethod
 from typing import List, Callable, Union
 

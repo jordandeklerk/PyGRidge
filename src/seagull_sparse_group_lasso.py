@@ -1,21 +1,6 @@
-"""
-This module implements the Sparse-Group LASSO algorithm using proximal gradient
-descent.
-
-The main function, seagull_sparse_group_lasso, solves the optimization problem:
-min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
-
-where P(beta) is the sparse-group lasso penalty:
-P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
-
-The algorithm uses soft-thresholding for the LASSO penalty and group
-soft-thresholding for the group LASSO penalty. It supports multiple lambda
-values for regularization path and handles both fixed and random effects in
-mixed models.
-"""
+"""Seagull sparse group lasso algorithm using proximal gradient descent."""
 
 import numpy as np
-from typing import List, Dict
 
 
 def seagull_sparse_group_lasso(
@@ -34,78 +19,121 @@ def seagull_sparse_group_lasso(
     num_intervals: int,
     num_fixed_effects: int,
     trace_progress: bool,
-) -> Dict:
-    """Sparse-group lasso via proximal gradient descent.
+) -> dict:
+    r"""Sparse-group lasso via proximal gradient descent.
 
-    This function implements the sparse-group lasso algorithm using proximal
+    This function implements the Seagull Sparse-Group Lasso algorithm using proximal
     gradient descent. It solves the optimization problem:
 
-    min_{beta} 1/(2n) ||y - X beta||_2^2 + lambda * P(beta)
+    .. math::
+        \min_{\boldsymbol{\beta}} \frac{1}{2n} \| \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \|_2^2 + \lambda P(\boldsymbol{\beta})
 
-    where P(beta) is the sparse-group lasso penalty:
+    where the penalty term :math:`P(\boldsymbol{\beta})` is the sparse-group lasso penalty:
 
-    P(beta) = alpha * sum_j |beta_j| + (1-alpha) * sum_g ||beta_g||_2
+    .. math::
+        P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \| \boldsymbol{\beta}_g \|_2
+
+    where:
+    - :math:`\beta_j` are individual coefficients,
+    - :math:`\boldsymbol{\beta}_g` are groups of coefficients,
+    - :math:`\alpha` is the mixing parameter balancing Lasso and Group Lasso penalties.
 
     Parameters
     ----------
     y : ndarray of shape (n_samples,)
-        Vector of observations.
+        Vector of observations, :math:`\mathbf{y}`.
     X : ndarray of shape (n_samples, n_features)
-        Design matrix relating y to fixed and random effects [X Z].
+        Design matrix relating :math:`\mathbf{y}` to fixed and random effects, :math:`\mathbf{X}`.
     feature_weights : ndarray of shape (n_features,)
-        Weights for the vectors of fixed and random effects [b^T, u^T]^T.
+        Weights for the vectors of fixed and random effects, :math:`\mathbf{w}`.
     groups : ndarray of shape (n_features,)
         Integer vector specifying group membership for each effect (fixed and
-        random).
+        random), :math:`\mathbf{G}`.
     beta : ndarray of shape (n_features,)
-        Initial guess for the coefficient vector.
+        Initial guess for the coefficient vector, :math:`\boldsymbol{\beta}`.
     index_permutation : ndarray of shape (n_features,)
         Integer vector containing information about the original order of the
-        user's input.
+        user's input, :math:`\mathbf{\pi}`.
     alpha : float
-        Mixing parameter of the penalty terms. Must satisfy 0 < alpha < 1.
+        Mixing parameter of the penalty terms. Must satisfy :math:`0 < \alpha < 1`.
     epsilon_convergence : float
-        Relative accuracy of the solution.
+        Relative accuracy of the solution, :math:`\epsilon`.
     max_iterations : int
         Maximum number of iterations for each value of the penalty parameter
-        lambda.
+        :math:`\lambda`.
     gamma : float
         Multiplicative parameter to decrease the step size during backtracking
-        line search.
+        line search, :math:`\gamma`.
     lambda_max : float
-        Maximum value for the penalty parameter.
+        Maximum value for the penalty parameter, :math:`\lambda_{\text{max}}`.
     proportion_xi : float
-        Multiplicative parameter to determine the minimum value of lambda for
-        the grid search.
+        Multiplicative parameter to determine the minimum value of :math:`\lambda` for
+        the grid search, :math:`\xi`.
     num_intervals : int
-        Number of lambdas for the grid search.
+        Number of lambdas for the grid search, :math:`m`.
     num_fixed_effects : int
-        Number of fixed effects present in the mixed model.
+        Number of fixed effects present in the mixed model, :math:`p`.
     trace_progress : bool
-        If True, print progress after each finished loop of the lambda grid.
+        If True, print progress after each finished loop of the :math:`\lambda` grid.
 
     Returns
     -------
     dict
         A dictionary containing the results of the sparse-group lasso algorithm.
         Keys include:
-        - 'random_effects': ndarray of shape (num_intervals, n_features) or
+        - `'random_effects'`: ndarray of shape (num_intervals, n_features) or
           (num_intervals, n_features - num_fixed_effects)
-        - 'fixed_effects': ndarray of shape (num_intervals, num_fixed_effects)
-          (only if num_fixed_effects > 0)
-        - 'lambda': ndarray of shape (num_intervals,)
-        - 'iterations': ndarray of shape (num_intervals,)
-        - 'alpha': float
-        - 'rel_acc': float
-        - 'max_iter': int
-        - 'gamma_bls': float
-        - 'xi': float
-        - 'loops_lambda': int
+        - `'fixed_effects'`: ndarray of shape (num_intervals, num_fixed_effects)`
+          (only if `num_fixed_effects` > 0)
+        - `'lambda'`: ndarray of shape (num_intervals,)
+        - `'iterations'`: ndarray of shape (num_intervals,)
+        - `'alpha'`: float
+        - `'rel_acc'`: float
+        - `'max_iter'`: int
+        - `'gamma_bls'`: float
+        - `'xi'`: float
+        - `'loops_lambda'`: int
+
+    Raises
+    ------
+    ValueError
+        If any of the input parameters are invalid, such as mismatched dimensions
+        or invalid parameter ranges.
 
     Notes
     -----
+    The algorithm solves the optimization problem:
+
+    .. math::
+        \min_{\boldsymbol{\beta}} \frac{1}{2n} \| \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \|_2^2 + \lambda P(\boldsymbol{\beta})
+
+    where the penalty term :math:`P(\boldsymbol{\beta})` is defined as:
+
+    .. math::
+        P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \| \boldsymbol{\beta}_g \|_2
+
     The algorithm uses proximal gradient descent with soft-thresholding for the
-    lasso penalty and group soft-thresholding for the group lasso penalty.
+    Lasso penalty and group soft-thresholding for the Group Lasso penalty.
+
+    The optimization process involves the following steps:
+    1. **Initialization:** Initialize variables and precompute necessary quantities.
+    2. **Grid Search Over :math:`\lambda`:** Perform a logarithmic grid search over
+       :math:`\lambda` values from :math:`\lambda_{\text{max}}` down to
+       :math:`\xi \times \lambda_{\text{max}}` with :math:`m` intervals.
+    3. **Proximal Gradient Descent:**
+       - **Gradient Calculation:** Compute the gradient of the loss function.
+       - **Proximal Step:** Apply soft-thresholding and group soft-thresholding to update
+         the coefficients :math:`\boldsymbol{\beta}`.
+       - **Convergence Check:** Assess whether the relative change in coefficients
+         meets the convergence criterion :math:`\epsilon`.
+    4. **Iteration Tracking:** Record the number of iterations and other diagnostic information.
+
+    Parameters such as `gamma` control the step size reduction during backtracking
+    line search to ensure convergence and numerical stability.
+
+    The results include the estimated fixed and random effects, the corresponding
+    :math:`\lambda` values, the number of iterations required for convergence, and
+    other diagnostic information.
     """
     n, p = X.shape
     num_groups = np.max(groups)
@@ -144,7 +172,7 @@ def seagull_sparse_group_lasso(
 
         while (not accuracy_reached) and (counter <= max_iterations):
             # Calculate gradient
-            gradient = (X.T @ (X @ beta) - X_transp_y) / n
+            gradient = (X.T @ beta - X_transp_y) / n
 
             criterion_fulfilled = False
             time_step = 1.0
@@ -181,9 +209,9 @@ def seagull_sparse_group_lasso(
                 if loss_new <= loss_old - np.dot(gradient, beta_diff) + (
                     0.5 / time_step
                 ) * np.sum(beta_diff**2):
-                    if np.max(
-                        np.abs(beta_diff)
-                    ) <= epsilon_convergence * np.linalg.norm(beta):
+                    # Adjust convergence criteria based on lambda value
+                    conv_threshold = max(epsilon_convergence, lambda_val * 1e-4)
+                    if np.max(np.abs(beta_diff)) <= conv_threshold * np.linalg.norm(beta):
                         accuracy_reached = True
                     beta = beta_new
                     criterion_fulfilled = True
