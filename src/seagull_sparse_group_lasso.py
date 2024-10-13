@@ -116,17 +116,17 @@ def seagull_sparse_group_lasso(
     Lasso penalty and group soft-thresholding for the Group Lasso penalty.
 
     The optimization process involves the following steps:
-    1. **Initialization:** Initialize variables and precompute necessary quantities.
-    2. **Grid Search Over :math:`\lambda`:** Perform a logarithmic grid search over
+    1. Initialization: Initialize variables and precompute necessary quantities.
+    2. Grid Search Over :math:`\lambda`: Perform a logarithmic grid search over
        :math:`\lambda` values from :math:`\lambda_{\text{max}}` down to
        :math:`\xi \times \lambda_{\text{max}}` with :math:`m` intervals.
-    3. **Proximal Gradient Descent:**
-       - **Gradient Calculation:** Compute the gradient of the loss function.
-       - **Proximal Step:** Apply soft-thresholding and group soft-thresholding to update
+    3. Proximal Gradient Descent:
+       - Gradient Calculation: Compute the gradient of the loss function.
+       - Proximal Step: Apply soft-thresholding and group soft-thresholding to update
          the coefficients :math:`\boldsymbol{\beta}`.
-       - **Convergence Check:** Assess whether the relative change in coefficients
+       - Convergence Check: Assess whether the relative change in coefficients
          meets the convergence criterion :math:`\epsilon`.
-    4. **Iteration Tracking:** Record the number of iterations and other diagnostic information.
+    4. Iteration Tracking: Record the number of iterations and other diagnostic information.
 
     Parameters such as `gamma` control the step size reduction during backtracking
     line search to ensure convergence and numerical stability.

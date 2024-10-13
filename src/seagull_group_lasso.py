@@ -106,9 +106,9 @@ def seagull_group_lasso(
         \min_{\boldsymbol{\beta}} \frac{1}{2n} \| \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \|_2^2 + \lambda P(\boldsymbol{\beta})
 
     where the penalty term :math:`P(\boldsymbol{\beta})` can be configured to perform:
-    - **Lasso Regression** by setting :math:`P(\boldsymbol{\beta}) = \sum_{j} |\beta_j|`
-    - **Group Lasso Regression** by setting :math:`P(\boldsymbol{\beta}) = \sum_{g} \| \boldsymbol{\beta}_g \|_2`
-    - **Sparse Group Lasso Regression** by setting
+    - Lasso Regression by setting :math:`P(\boldsymbol{\beta}) = \sum_{j} |\beta_j|`
+    - Group Lasso Regression by setting :math:`P(\boldsymbol{\beta}) = \sum_{g} \| \boldsymbol{\beta}_g \|_2`
+    - Sparse Group Lasso Regression by setting
       :math:`P(\boldsymbol{\beta}) = \alpha \sum_{j} |\beta_j| + (1 - \alpha) \sum_{g} \| \boldsymbol{\beta}_g \|_2`
 
     The algorithm employs a coordinate descent approach with soft-thresholding
