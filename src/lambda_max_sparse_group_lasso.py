@@ -1,7 +1,7 @@
 """Compute the maximum lambda value for sparse group lasso regularization."""
 
 import numpy as np
-from seagull_bisection import seagull_bisection
+from ..src.bisection import bisection
 
 
 def lambda_max_sparse_group_lasso(
@@ -140,7 +140,7 @@ def lambda_max_sparse_group_lasso(
             left_border = 0
             right_border = np.max(vector_temp_absolute) / alpha
 
-            vector_max_groups[i] = seagull_bisection(
+            vector_max_groups[i] = bisection(
                 vector_group_sizes[i],
                 alpha,
                 left_border,

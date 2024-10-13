@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from ..src.seagull_sparse_group_lasso import seagull_sparse_group_lasso
+from ..src.sparse_group_lasso import sparse_group_lasso
 
 
 @pytest.fixture
@@ -32,20 +32,20 @@ def sample_data():
     }
 
 
-def test_seagull_sparse_group_lasso_basic(sample_data):
-    """Test basic functionality of seagull_sparse_group_lasso."""
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+def test_sparse_group_lasso_basic(sample_data):
+    """Test basic functionality of sparse_group_lasso."""
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     assert isinstance(result, dict)
     assert "random_effects" in result
     assert "lambda" in result
     assert "iterations" in result
 
 
-def test_seagull_sparse_group_lasso_dimensions(sample_data):
-    """Test the output dimensions of seagull_sparse_group_lasso."""
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+def test_sparse_group_lasso_dimensions(sample_data):
+    """Test the output dimensions of sparse_group_lasso."""
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     n, p = sample_data["X"].shape
     num_intervals = sample_data["num_intervals"]
     assert result["random_effects"].shape == (num_intervals, p)
@@ -53,70 +53,70 @@ def test_seagull_sparse_group_lasso_dimensions(sample_data):
     assert result["iterations"].shape == (num_intervals,)
 
 
-def test_seagull_sparse_group_lasso_fixed_effects(sample_data):
-    """Test seagull_sparse_group_lasso with fixed effects included."""
+def test_sparse_group_lasso_fixed_effects(sample_data):
+    """Test sparse_group_lasso with fixed effects included."""
     sample_data["num_fixed_effects"] = 5
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     assert "fixed_effects" in result
     assert "random_effects" in result
     assert result["fixed_effects"].shape == (sample_data["num_intervals"], 5)
     assert result["random_effects"].shape == (sample_data["num_intervals"], 15)
 
 
-def test_seagull_sparse_group_lasso_convergence(sample_data):
-    """Test convergence of iterations in seagull_sparse_group_lasso."""
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+def test_sparse_group_lasso_convergence(sample_data):
+    """Test convergence of iterations in sparse_group_lasso."""
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     assert np.all(result["iterations"] <= sample_data["max_iterations"])
 
 
-def test_seagull_sparse_group_lasso_lambda_range(sample_data):
+def test_sparse_group_lasso_lambda_range(sample_data):
     """Test that lambda values are within the specified range."""
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     assert np.all(result["lambda"] <= sample_data["lambda_max"])
     assert np.all(
         result["lambda"] >= sample_data["lambda_max"] * sample_data["proportion_xi"]
     )
 
 
-def test_seagull_sparse_group_lasso_trace_progress(sample_data, capsys):
-    """Test progress tracing during seagull_sparse_group_lasso execution."""
+def test_sparse_group_lasso_trace_progress(sample_data, capsys):
+    """Test progress tracing during sparse_group_lasso execution."""
     sample_data["trace_progress"] = True
-    result = seagull_sparse_group_lasso(**sample_data)
-    assert result is not None, "seagull_sparse_group_lasso returned None"
+    result = sparse_group_lasso(**sample_data)
+    assert result is not None, "sparse_group_lasso returned None"
     captured = capsys.readouterr()
     assert "Loop: 10 of 10 finished" in captured.out
 
 
-def test_seagull_sparse_group_lasso_alpha_extremes(sample_data):
-    """Test seagull_sparse_group_lasso with extreme alpha values."""
+def test_sparse_group_lasso_alpha_extremes(sample_data):
+    """Test sparse_group_lasso with extreme alpha values."""
     # Test with alpha close to 0 (more group lasso-like)
     sample_data["alpha"] = 0.01
-    result_low_alpha = seagull_sparse_group_lasso(**sample_data)
+    result_low_alpha = sparse_group_lasso(**sample_data)
     assert (
         result_low_alpha is not None
-    ), "seagull_sparse_group_lasso returned None for low alpha"
+    ), "sparse_group_lasso returned None for low alpha"
 
     # Test with alpha close to 1 (more lasso-like)
     sample_data["alpha"] = 0.99
-    result_high_alpha = seagull_sparse_group_lasso(**sample_data)
+    result_high_alpha = sparse_group_lasso(**sample_data)
     assert (
         result_high_alpha is not None
-    ), "seagull_sparse_group_lasso returned None for high alpha"
+    ), "sparse_group_lasso returned None for high alpha"
 
     assert not np.allclose(
         result_low_alpha["random_effects"], result_high_alpha["random_effects"]
     )
 
 
-def test_seagull_sparse_group_lasso_input_validation(sample_data):
-    """Test input validation for seagull_sparse_group_lasso."""
+def test_sparse_group_lasso_input_validation(sample_data):
+    """Test input validation for sparse_group_lasso."""
     with pytest.raises(ValueError):
         invalid_data = sample_data.copy()
         invalid_data["X"] = invalid_data["X"][:, :-1]  # Mismatch dimensions
-        seagull_sparse_group_lasso(**invalid_data)
+        sparse_group_lasso(**invalid_data)
 
 
 if __name__ == "__main__":

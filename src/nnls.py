@@ -219,7 +219,7 @@ def fnnls_core(
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.
     """
-    
+
     n = AtA.shape[0]
     x = np.zeros(n, dtype=AtA.dtype)
     s = np.zeros(n, dtype=AtA.dtype)

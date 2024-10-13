@@ -7,7 +7,7 @@ def sqrt_double(x):
     return np.sqrt(x)
 
 
-def seagull_bisection(
+def bisection(
     rows: int,
     alpha: float,
     left_border: float,

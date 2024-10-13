@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from ..src.seagull_lasso import seagull_lasso
+from ..src.lasso import lasso
 
 
 @pytest.fixture
@@ -27,18 +27,18 @@ def sample_data():
     }
 
 
-def test_seagull_lasso_basic(sample_data):
-    """Test basic functionality of seagull_lasso."""
-    result = seagull_lasso(**sample_data)
+def test_lasso_basic(sample_data):
+    """Test basic functionality of lasso."""
+    result = lasso(**sample_data)
     assert isinstance(result, dict)
     assert "random_effects" in result
     assert "lambda" in result
     assert "iterations" in result
 
 
-def test_seagull_lasso_dimensions(sample_data):
-    """Test the dimensions of the output from seagull_lasso."""
-    result = seagull_lasso(**sample_data)
+def test_lasso_dimensions(sample_data):
+    """Test the dimensions of the output from lasso."""
+    result = lasso(**sample_data)
     n, p = sample_data["X"].shape
     num_intervals = sample_data["num_intervals"]
     assert result["random_effects"].shape == (num_intervals, p)
@@ -46,43 +46,43 @@ def test_seagull_lasso_dimensions(sample_data):
     assert result["iterations"].shape == (num_intervals,)
 
 
-def test_seagull_lasso_fixed_effects(sample_data):
-    """Test seagull_lasso with fixed effects included."""
+def test_lasso_fixed_effects(sample_data):
+    """Test lasso with fixed effects included."""
     sample_data["num_fixed_effects"] = 5
-    result = seagull_lasso(**sample_data)
+    result = lasso(**sample_data)
     assert "fixed_effects" in result
     assert "random_effects" in result
     assert result["fixed_effects"].shape == (sample_data["num_intervals"], 5)
     assert result["random_effects"].shape == (sample_data["num_intervals"], 15)
 
 
-def test_seagull_lasso_convergence(sample_data):
-    """Test convergence of iterations in seagull_lasso."""
-    result = seagull_lasso(**sample_data)
+def test_lasso_convergence(sample_data):
+    """Test convergence of iterations in lasso."""
+    result = lasso(**sample_data)
     assert np.all(result["iterations"] <= sample_data["max_iterations"])
 
 
-def test_seagull_lasso_lambda_range(sample_data):
+def test_lasso_lambda_range(sample_data):
     """Test that lambda values are within the specified range."""
-    result = seagull_lasso(**sample_data)
+    result = lasso(**sample_data)
     assert np.all(result["lambda"] <= sample_data["lambda_max"])
     assert np.all(
         result["lambda"] >= sample_data["lambda_max"] * sample_data["proportion_xi"]
     )
 
 
-def test_seagull_lasso_trace_progress(sample_data, capsys):
-    """Test progress tracing during seagull_lasso execution."""
+def test_lasso_trace_progress(sample_data, capsys):
+    """Test progress tracing during lasso execution."""
     sample_data["trace_progress"] = True
-    seagull_lasso(**sample_data)
+    lasso(**sample_data)
     captured = capsys.readouterr()
     assert "Loop: 10 of 10 finished" in captured.out
 
 
-def test_seagull_lasso_zero_lambda(sample_data):
-    """Test seagull_lasso behavior with lambda_max set to zero."""
+def test_lasso_zero_lambda(sample_data):
+    """Test lasso behavior with lambda_max set to zero."""
     sample_data["lambda_max"] = 0
-    result = seagull_lasso(**sample_data)
+    result = lasso(**sample_data)
     assert np.allclose(result["lambda"], 0)
     assert np.all(
         result["iterations"] == 1
@@ -95,29 +95,29 @@ def test_seagull_lasso_zero_lambda(sample_data):
     assert np.allclose(result["random_effects"][-1], ols_solution, atol=1e-5)
 
 
-def test_seagull_lasso_large_lambda(sample_data):
-    """Test seagull_lasso behavior with a large lambda_max value."""
+def test_lasso_large_lambda(sample_data):
+    """Test lasso behavior with a large lambda_max value."""
     sample_data["lambda_max"] = 1e6
-    result = seagull_lasso(**sample_data)
+    result = lasso(**sample_data)
     assert np.all(
         np.abs(result["random_effects"]) < 1e-6
     )  # All coefficients should be close to zero
 
 
-def test_seagull_lasso_single_iteration(sample_data):
-    """Test seagull_lasso with a single interval."""
+def test_lasso_single_iteration(sample_data):
+    """Test lasso with a single interval."""
     sample_data["num_intervals"] = 1
-    result = seagull_lasso(**sample_data)
+    result = lasso(**sample_data)
     assert len(result["lambda"]) == 1
     assert len(result["iterations"]) == 1
 
 
-def test_seagull_lasso_input_validation(sample_data):
-    """Test input validation for seagull_lasso."""
+def test_lasso_input_validation(sample_data):
+    """Test input validation for lasso."""
     with pytest.raises(ValueError):
         invalid_data = sample_data.copy()
         invalid_data["X"] = invalid_data["X"][:, :-1]  # Mismatch dimensions
-        seagull_lasso(**invalid_data)
+        lasso(**invalid_data)
 
 
 if __name__ == "__main__":
