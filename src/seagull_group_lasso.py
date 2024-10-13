@@ -130,9 +130,8 @@ def seagull_group_lasso(
     The results include the estimated fixed and random effects, the
     corresponding :math:`\lambda` values, the number of iterations
     required for convergence, and other diagnostic information.
-
     """
-
+    
     n, p = X.shape
 
     # Initialize variables

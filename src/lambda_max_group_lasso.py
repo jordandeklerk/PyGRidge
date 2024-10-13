@@ -48,6 +48,7 @@ def lambda_max_group_lasso(y, groups, feature_weights, beta, X):
     - :math:`w_i` is the weight for group :math:`i`,
     - and :math:`|G_i|` is the size of group :math:`i`.
     """
+    
     n, p = X.shape
     num_groups = np.max(groups)
     lambda_max = 0.0

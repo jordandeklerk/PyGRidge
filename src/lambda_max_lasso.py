@@ -46,6 +46,7 @@ def lambda_max_lasso(y, feature_weights, beta, X):
     3. Scale :math:`\mathbf{X}^T \mathbf{r}` with weights and sample size.
     4. Determine :math:`\lambda_{\text{max}}` and apply a numeric correction factor.
     """
+    
     n, p = X.shape
 
     # Check dimensions

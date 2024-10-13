@@ -80,6 +80,7 @@ def nonneg_lsq(
     ValueError
         If the specified algorithm is not recognized.
     """
+
     # Input validation
     if not isinstance(A, np.ndarray) or not isinstance(B, np.ndarray):
         raise InvalidInputError("A and B must be numpy arrays.")
@@ -158,6 +159,7 @@ def fnnls(
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.
     """
+
     if B.ndim == 1:
         B = B[:, np.newaxis]
 
@@ -217,6 +219,7 @@ def fnnls_core(
     ConvergenceError
         If the algorithm fails to converge within the maximum number of iterations.
     """
+    
     n = AtA.shape[0]
     x = np.zeros(n, dtype=AtA.dtype)
     s = np.zeros(n, dtype=AtA.dtype)

@@ -121,6 +121,7 @@ def seagull_lasso(
     corresponding :math:`\lambda` values, the number of iterations
     required for convergence, and other diagnostic information.
     """
+    
     n, p = X.shape
 
     # Calculate X.T * y

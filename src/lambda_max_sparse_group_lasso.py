@@ -81,7 +81,6 @@ def lambda_max_sparse_group_lasso(
     - and :math:`n` is the number of samples.
 
     The `seagull_bisection` function is used to solve for :math:`\lambda_g` within specified borders.
-
     """
 
     n, p = matrix_x.shape

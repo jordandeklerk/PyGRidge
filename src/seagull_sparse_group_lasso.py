@@ -135,6 +135,7 @@ def seagull_sparse_group_lasso(
     :math:`\lambda` values, the number of iterations required for convergence, and
     other diagnostic information.
     """
+    
     n, p = X.shape
     num_groups = np.max(groups)
 
