@@ -1,31 +1,8 @@
-"""Regression estimators based on group ridge regression.
-
-This module implements a comprehensive suite of group Ridge regression
-predictors and related utilities, designed for efficient and flexible
-regularized linear regression. It is particularly suitable for high-dimensional
-data where the number of features (p) may be comparable to or exceed the number
-of samples (n).
-
-The module provides:
-
-1. Abstract and Concrete Ridge Predictors:
-   - AbstractRidgePredictor: Base class for all Ridge predictors.
-   - CholeskyRidgePredictor: Uses Cholesky decomposition for scenarios where p < n.
-   - WoodburyRidgePredictor: Employs the Woodbury matrix identity for cases where p > n.
-   - ShermanMorrisonRidgePredictor: Applies the Sherman-Morrison formula for very large p.
-
-2. BasicGroupRidgeWorkspace:
-   - Manages the entire Ridge regression workflow.
-
-3. Regularization Parameter Tuning Utilities:
-   - lambda_lolas_rule: Computes \lambda using the Panagiotis Lolas rule.
-   - MomentTunerSetup: Prepares moment-based statistics for tuning \lambda.
-   - sigma_squared_path: Computes the regularization path for different \sigma^2 values.
-"""
+"""Regression estimators based on group ridge regression."""
 
 
 from abc import ABC, abstractmethod
-from typing import List, Union, TypeVar
+from typing import Union, TypeVar
 import numpy as np
 from scipy.linalg import cho_solve
 from ..src.groupedfeatures import GroupedFeatures
@@ -60,7 +37,7 @@ class NumericalInstabilityError(RidgeRegressionError):
 
 
 class AbstractRidgePredictor(ABC):
-    """Abstract base class for Ridge regression predictors.
+    r"""Abstract base class for Ridge regression predictors.
 
     This class defines the interface that all concrete Ridge predictors must
     implement, ensuring consistency in how regularization parameters are updated
@@ -69,33 +46,31 @@ class AbstractRidgePredictor(ABC):
 
     Ridge regression seeks to minimize the following objective function:
 
-        \min_{\beta} { \|Y - X\beta\|_2^2 + \lambda\|\beta\|_2^2 }
+    .. math::
+        \min_{\beta} \|Y - X\beta\|_2^2 + \lambda\|\beta\|_2^2
 
     where:
-    - Y is the response vector with dimensions (n, ).
-    - X is the design matrix with dimensions (n, p).
-    - \beta is the coefficient vector with dimensions (p, ).
-    - \lambda is the regularization parameter.
+    - :math:`Y` is the response vector with dimensions :math:`(n, )`.
+    - :math:`X` is the design matrix with dimensions :math:`(n, p)`.
+    - :math:`\beta` is the coefficient vector with dimensions :math:`(p, )`.
+    - :math:`\lambda` is the regularization parameter.
 
     The solution to this optimization problem is given by:
 
+    .. math::
         \beta = (X^T X + \lambda I_p)^{-1} X^T Y
-
-    This abstract class outlines methods for updating regularization parameters,
-    computing traces, performing matrix inversions, and solving linear systems
-    essential for Ridge regression.
     """
 
     @abstractmethod
     def update_lambda_s(self, groups: GroupedFeatures, lambdas: np.ndarray):
-        """Update the regularization parameters (\lambda) based on feature groups.
+        r"""Update the regularization parameters (:math:`\lambda`) based on feature groups.
 
         Parameters
         ----------
         groups : GroupedFeatures
             The grouped features object defining feature groupings.
         lambdas : np.ndarray
-            The new \lambda values for each group.
+            The new :math:`\lambda` values for each group.
 
         Returns
         -------
@@ -105,18 +80,18 @@ class AbstractRidgePredictor(ABC):
 
     @abstractmethod
     def trace_XtX(self) -> float:
-        """Compute the trace of X^T X.
+        """Compute the trace of :math:`X^T X`.
 
         Returns
         -------
         float
-            The trace of X^T X.
+            The trace of :math:`X^T X`.
         """
         pass
 
     @abstractmethod
     def XtXp_lambda_ldiv_XtX(self) -> np.ndarray:
-        """Compute (X^T X + \Lambda)^{-1} X^T X.
+        r"""Compute :math:`(X^T X + \Lambda)^{-1} X^T X`.
 
         Returns
         -------
@@ -127,7 +102,7 @@ class AbstractRidgePredictor(ABC):
 
     @abstractmethod
     def ldiv(self, B: np.ndarray) -> np.ndarray:
-        """Solve the linear system (X^T X + \Lambda) x = B.
+        r"""Solve the linear system :math:`(X^T X + \Lambda) x = B`.
 
         Parameters
         ----------
@@ -137,16 +112,16 @@ class AbstractRidgePredictor(ABC):
         Returns
         -------
         np.ndarray
-            The solution vector x.
+            The solution vector :math:`x`.
         """
         pass
 
 
 class CholeskyRidgePredictor(AbstractRidgePredictor):
-    """Ridge predictor using Cholesky decomposition for efficient matrix inversion.
+    r"""Ridge predictor using Cholesky decomposition for efficient matrix inversion.
 
-    Suitable for scenarios where the number of features (p) is less than the number
-    of samples (n), leveraging the properties of Cholesky decomposition to solve
+    Suitable for scenarios where the number of features (:math:`p`) is less than the number
+    of samples (:math:`n`), leveraging the properties of Cholesky decomposition to solve
     the Ridge regression problem efficiently.
 
     Attributes
@@ -156,11 +131,11 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
     p : int
         Number of features.
     XtX : np.ndarray
-        The X^T X matrix scaled by the number of samples.
+        The :math:`X^T X` matrix scaled by the number of samples.
     XtXp_lambda : np.ndarray
-        The augmented matrix (X^T X + \Lambda).
+        The augmented matrix (:math:`X^T X + \Lambda`).
     XtXp_lambda_chol : np.ndarray
-        The Cholesky decomposition of (X^T X + \Lambda).
+        The Cholesky decomposition of (:math:`X^T X + \Lambda`).
     lower : bool
         Indicates if the Cholesky factor is lower triangular.
     """
@@ -192,7 +167,7 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
         self.lower = True
 
     def update_cholesky(self):
-        """Update the Cholesky decomposition of (X^T X + \Lambda).
+        r"""Update the Cholesky decomposition of (:math:`X^T X + \Lambda`).
 
         Raises
         ------
@@ -208,14 +183,14 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
             )
 
     def update_lambda_s(self, groups: GroupedFeatures, lambdas: np.ndarray):
-        """Update the regularization parameters and recompute the Cholesky decomposition.
+        r"""Update the regularization parameters and recompute the Cholesky decomposition.
 
         Parameters
         ----------
         groups : GroupedFeatures
             The grouped features object.
         lambdas : np.ndarray
-            The new \lambda values for each group.
+            The new :math:`\lambda` values for each group.
 
         Returns
         -------
@@ -226,17 +201,17 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
         self.update_cholesky()
 
     def trace_XtX(self) -> float:
-        """Compute the trace of X^T X.
+        """Compute the trace of :math:`X^T X`.
 
         Returns
         -------
         float
-            The trace of X^T X.
+            The trace of :math:`X^T X`.
         """
         return np.trace(self.XtX)
 
     def XtXp_lambda_ldiv_XtX(self) -> np.ndarray:
-        """Compute (X^T X + \Lambda)^{-1} X^T X using Cholesky decomposition.
+        r"""Compute :math:`(X^T X + \Lambda)^{-1} X^T X` using Cholesky decomposition.
 
         Returns
         -------
@@ -246,7 +221,7 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
         return cho_solve((self.XtXp_lambda_chol, self.lower), self.XtX)
 
     def ldiv(self, B: np.ndarray) -> np.ndarray:
-        """Solve the system (X^T X + \Lambda) x = B using Cholesky decomposition.
+        r"""Solve the system :math:`(X^T X + \Lambda) x = B` using Cholesky decomposition.
 
         Parameters
         ----------
@@ -256,27 +231,28 @@ class CholeskyRidgePredictor(AbstractRidgePredictor):
         Returns
         -------
         np.ndarray
-            The solution vector x.
+            The solution vector :math:`x`.
         """
         return cho_solve((self.XtXp_lambda_chol, self.lower), B)
 
 
 class WoodburyRidgePredictor(AbstractRidgePredictor):
-    """Ridge predictor using the Woodbury matrix identity for efficient matrix inversion.
+    r"""Ridge predictor using the Woodbury matrix identity for efficient matrix inversion.
 
-    This class is suitable for scenarios where the number of features (p) is greater
-    than the number of samples (n), leveraging the Woodbury matrix identity to solve
+    This class is suitable for scenarios where the number of features (:math:`p`) is greater
+    than the number of samples (:math:`n`), leveraging the Woodbury matrix identity to solve
     the Ridge regression problem efficiently.
 
     The Woodbury matrix identity states:
 
+    .. math::
         (A + UCV)^{-1} = A^{-1} - A^{-1}U(C^{-1} + V A^{-1} U)^{-1} V A^{-1}
 
     In the context of Ridge regression:
-        A = \Lambda (diagonal matrix of regularization parameters)
-        U = X^T
-        C = I (identity matrix)
-        V = X
+        :math:`A = \Lambda` (diagonal matrix of regularization parameters)
+        :math:`U = X^T`
+        :math:`C = I` (identity matrix)
+        :math:`V = X`
 
     Attributes
     ----------
@@ -287,13 +263,13 @@ class WoodburyRidgePredictor(AbstractRidgePredictor):
     X : np.ndarray
         The design matrix.
     XtX : np.ndarray
-        The X^T X matrix.
+        The :math:`X^T X` matrix.
     A_inv : np.ndarray
-        The inverse of \Lambda.
+        The inverse of :math:`\Lambda`.
     U : np.ndarray
-        Matrix U in the Woodbury identity.
+        Matrix :math:`U` in the Woodbury identity.
     V : np.ndarray
-        Matrix V in the Woodbury identity.
+        Matrix :math:`V` in the Woodbury identity.
     """
 
     def __init__(self, X: np.ndarray):
@@ -324,14 +300,14 @@ class WoodburyRidgePredictor(AbstractRidgePredictor):
         self.V = X
 
     def update_lambda_s(self, groups: GroupedFeatures, lambdas: np.ndarray):
-        """Update the regularization parameters and recompute the inverse matrix.
+        r"""Update the regularization parameters and recompute the inverse matrix.
 
         Parameters
         ----------
         groups : GroupedFeatures
             The grouped features object.
         lambdas : np.ndarray
-            The new \lambda values for each group.
+            The new :math:`\lambda` values for each group.
 
         Raises
         ------
@@ -368,17 +344,17 @@ class WoodburyRidgePredictor(AbstractRidgePredictor):
             )
 
     def trace_XtX(self) -> float:
-        """Compute the trace of X^T X.
+        """Compute the trace of :math:`X^T X`.
 
         Returns
         -------
         float
-            The trace of X^T X.
+            The trace of :math:`X^T X`.
         """
         return np.trace(self.XtX)
 
     def XtXp_lambda_ldiv_XtX(self) -> np.ndarray:
-        """Compute (X^T X + \Lambda)^{-1} X^T X.
+        r"""Compute :math:`(X^T X + \Lambda)^{-1} X^T X`.
 
         Returns
         -------
@@ -388,7 +364,7 @@ class WoodburyRidgePredictor(AbstractRidgePredictor):
         return self.A_inv @ self.XtX
 
     def ldiv(self, B: np.ndarray) -> np.ndarray:
-        """Solve the system (X^T X + \Lambda) x = B.
+        r"""Solve the system :math:`(X^T X + \Lambda) x = B`.
 
         Parameters
         ----------
@@ -398,23 +374,24 @@ class WoodburyRidgePredictor(AbstractRidgePredictor):
         Returns
         -------
         np.ndarray
-            The solution vector x.
+            The solution vector :math:`x`.
         """
         return self.A_inv @ B
 
 
 class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
-    """Ridge predictor using the Sherman-Morrison formula for efficient matrix updates.
+    r"""Ridge predictor using the Sherman-Morrison formula for efficient matrix updates.
 
-    This class is suitable for scenarios where the number of features (p) is much
-    greater than the number of samples (n), leveraging the Sherman-Morrison formula
-    to efficiently update the inverse of (X^T X + \Lambda) as \Lambda changes.
+    This class is suitable for scenarios where the number of features (:math:`p`) is much
+    greater than the number of samples (:math:`n`), leveraging the Sherman-Morrison formula
+    to efficiently update the inverse of (:math:`X^T X + \Lambda`) as :math:`\Lambda` changes.
 
     The Sherman-Morrison formula states:
 
-        (A + uv^T)^{-1} = A^{-1} - (A^{-1}u v^T A^{-1}) / (1 + v^T A^{-1} u)
+    .. math::
+        (A + uv^T)^{-1} = A^{-1} - \frac{A^{-1}u v^T A^{-1}}{1 + v^T A^{-1} u}
 
-    where A is the current inverse, and uv^T represents a rank-one update.
+    where :math:`A` is the current inverse, and :math:`uv^T` represents a rank-one update.
 
     Attributes
     ----------
@@ -425,15 +402,15 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
     X : np.ndarray
         The design matrix.
     XtX : np.ndarray
-        The regularized X^T X matrix.
+        The regularized :math:`X^T X` matrix.
     A : np.ndarray
-        The matrix (I + X^T X).
+        The matrix (:math:`I + X^T X`).
     A_inv : np.ndarray
-        The inverse of matrix A.
+        The inverse of matrix :math:`A`.
     U : np.ndarray
-        Matrix U used for efficiency in updates.
+        Matrix :math:`U` used for efficiency in updates.
     V : np.ndarray
-        Matrix V used for efficiency in updates.
+        Matrix :math:`V` used for efficiency in updates.
     """
 
     def __init__(self, X: np.ndarray):
@@ -465,14 +442,14 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
         self.V = self.X / np.sqrt(self.n)
 
     def update_lambda_s(self, groups: GroupedFeatures, lambdas: np.ndarray):
-        """Update the regularization parameters (\lambda) and adjust A_inv accordingly.
+        r"""Update the regularization parameters (:math:`\lambda`) and adjust A_inv accordingly.
 
         Parameters
         ----------
         groups : GroupedFeatures
             The grouped features object.
         lambdas : np.ndarray
-            The new \lambda values for each group.
+            The new :math:`\lambda` values for each group.
 
         Raises
         ------
@@ -522,17 +499,17 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
         self.A_inv -= np.outer(Au, vA) / denominator
 
     def trace_XtX(self) -> float:
-        """Compute the trace of X^T X.
+        r"""Compute the trace of :math:`X^T X`.
 
         Returns
         -------
         float
-            The trace of X^T X.
+            The trace of :math:`X^T X`.
         """
         return np.trace(self.XtX)
 
     def XtXp_lambda_ldiv_XtX(self) -> np.ndarray:
-        """Compute (X^T X + \Lambda)^{-1} X^T X.
+        r"""Compute :math:`(X^T X + \Lambda)^{-1} X^T X`.
 
         Returns
         -------
@@ -542,7 +519,7 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
         return self.ldiv(self.XtX)
 
     def ldiv(self, B: np.ndarray) -> np.ndarray:
-        """Solve the system (X^T X + \Lambda)^{-1} * B using the precomputed A_inv.
+        r"""Solve the system :math:`(X^T X + \Lambda)^{-1} B` using the precomputed A_inv.
 
         Parameters
         ----------
@@ -552,7 +529,7 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
         Returns
         -------
         np.ndarray
-            The solution vector x.
+            The solution vector :math:`x`.
         """
         if B.ndim == 1:
             return self.A_inv @ B
@@ -563,7 +540,7 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
     def sherman_morrison_formula(
         A: np.ndarray, u: np.ndarray, v: np.ndarray
     ) -> np.ndarray:
-        """Apply the Sherman-Morrison formula to matrix A with vectors u and v.
+        """Apply the Sherman-Morrison formula to matrix :math:`A` with vectors :math:`u` and :math:`v`.
 
         Parameters
         ----------
@@ -593,7 +570,7 @@ class ShermanMorrisonRidgePredictor(AbstractRidgePredictor):
 
 
 class BasicGroupRidgeWorkspace:
-    """Workspace for performing group Ridge regression, including fitting and prediction.
+    r"""Workspace for performing group Ridge regression, including fitting and prediction.
 
     This class manages the entire workflow of group-wise Ridge regression, handling
     the fitting process, parameter updates, predictions, and evaluation metrics. It
@@ -616,7 +593,7 @@ class BasicGroupRidgeWorkspace:
     predictor : AbstractRidgePredictor
         The Ridge predictor being used.
     XtY : np.ndarray
-        The X^T Y matrix scaled by the number of samples.
+        The :math:`X^T Y` matrix scaled by the number of samples.
     lambdas : np.ndarray
         Regularization parameters for each group.
     beta_current : np.ndarray
@@ -624,7 +601,7 @@ class BasicGroupRidgeWorkspace:
     Y_hat : np.ndarray
         Predicted values.
     XtXp_lambda_inv : np.ndarray
-        Inverse of (X^T X + \Lambda).
+        Inverse of (:math:`X^T X + \Lambda`).
     moment_setup : MomentTunerSetup
         Moment setup for parameter tuning.
     leverage_store : np.ndarray
@@ -671,18 +648,18 @@ class BasicGroupRidgeWorkspace:
         self.beta_current = self.predictor.ldiv(self.XtY)
         self.Y_hat = np.dot(X, self.beta_current)
 
-        # Compute (X^T X + \Lambda)^{-1}
+        # Compute (:math:`X^T X + \Lambda`)^{-1}
         self.XtXp_lambda_inv = self.predictor.ldiv(np.eye(self.p))
 
         self.moment_setup = MomentTunerSetup(self)
 
     def update_lambda_s(self, lambdas: np.ndarray):
-        """Update the regularization parameters (\lambda).
+        r"""Update the regularization parameters (:math:`\lambda`).
 
         Parameters
         ----------
         lambdas : np.ndarray
-            New \lambda values for each group.
+            New :math:`\lambda` values for each group.
 
         Returns
         -------
@@ -703,12 +680,12 @@ class BasicGroupRidgeWorkspace:
         return self.groups.ngroups()
 
     def coef(self) -> np.ndarray:
-        """Get the current coefficient estimates (\beta).
+        """Get the current coefficient estimates (:math:`\beta`).
 
         Returns
         -------
         np.ndarray
-            Coefficient vector \beta.
+            Coefficient vector :math:`\beta`.
         """
         return self.beta_current
 
@@ -723,7 +700,7 @@ class BasicGroupRidgeWorkspace:
         return True
 
     def leverage(self) -> np.ndarray:
-        """Get the leverage scores (h_i).
+        """Get the leverage scores (:math:`h_i`).
 
         Returns
         -------
@@ -733,12 +710,12 @@ class BasicGroupRidgeWorkspace:
         return self.leverage_store
 
     def modelmatrix(self) -> np.ndarray:
-        """Get the design matrix (X).
+        """Get the design matrix (:math:`X`).
 
         Returns
         -------
         np.ndarray
-            Design matrix X.
+            Design matrix :math:`X`.
         """
         return self.X
 
@@ -758,12 +735,12 @@ class BasicGroupRidgeWorkspace:
         return np.dot(X_new, self.coef())
 
     def response(self) -> np.ndarray:
-        """Get the response variable (Y).
+        """Get the response variable (:math:`Y`).
 
         Returns
         -------
         np.ndarray
-            Response vector Y.
+            Response vector :math:`Y`.
         """
         return self.Y
 
@@ -795,13 +772,13 @@ class BasicGroupRidgeWorkspace:
         return np.mean((Y_test - np.dot(X_test, self.beta_current)) ** 2)
 
     def fit(self, lambdas: Union[np.ndarray, dict]):
-        """Fit the Ridge regression model with given regularization parameters.
+        r"""Fit the Ridge regression model with given regularization parameters.
 
         Parameters
         ----------
         lambdas : Union[np.ndarray, dict]
             The regularization parameters. Can be a numpy array or a dictionary
-            mapping group names to \lambda values.
+            mapping group names to :math:`\lambda` values.
 
         Returns
         -------
@@ -825,29 +802,30 @@ class BasicGroupRidgeWorkspace:
 
 
 def lambda_lolas_rule(rdg: BasicGroupRidgeWorkspace, multiplier: float = 0.1) -> float:
-    """Compute the regularization parameter \lambda using the Panagiotis Lolas rule.
+    r"""Compute the regularization parameter :math:`\lambda` using the Panagiotis Lolas rule.
 
     The Lolas rule provides a heuristic for selecting the regularization parameter
-    based on the model's degrees of freedom and the trace of X^T X. This method
+    based on the model's degrees of freedom and the trace of :math:`X^T X`. This method
     balances the complexity of the model against its fit to the training data.
 
-    The \lambda is computed as:
+    The :math:`\lambda` is computed as:
 
-        \lambda = multiplier * (p^2 / n) / trace(X^T X)
+    .. math::
+        \lambda = \text{multiplier} \times \frac{p^2}{n \times \text{trace}(X^T X)}
 
     where:
     - multiplier : float, default=0.1
         A scalar multiplier for the rule.
-    - p : int
+    - :math:`p` : int
         Number of features.
-    - n : int
+    - :math:`n` : int
         Number of samples.
-    - trace(X^T X) : float
-        The trace of the covariance matrix X^T X.
+    - :math:`\text{trace}(X^T X)` : float
+        The trace of the covariance matrix :math:`X^T X`.
 
     This formula scales the regularization parameter based on both the
     dimensionality of the data and the trace of the covariance matrix, ensuring
-    that \lambda is appropriately tuned for the given dataset.
+    that :math:`\lambda` is appropriately tuned for the given dataset.
 
     Parameters
     ----------
@@ -859,12 +837,12 @@ def lambda_lolas_rule(rdg: BasicGroupRidgeWorkspace, multiplier: float = 0.1) ->
     Returns
     -------
     float
-        The computed \lambda value.
+        The computed :math:`\lambda` value.
 
     Raises
     ------
     ValueError
-        If multiplier is not positive or if trace(X^T X) is zero.
+        If multiplier is not positive or if :math:`\text{trace}(X^T X)` is zero.
     """
     if multiplier <= 0:
         raise ValueError("Multiplier must be positive.")
@@ -877,12 +855,12 @@ def lambda_lolas_rule(rdg: BasicGroupRidgeWorkspace, multiplier: float = 0.1) ->
 
 
 class MomentTunerSetup:
-    """Setup for the moment-based tuning of regularization parameters.
+    r"""Setup for the moment-based tuning of regularization parameters.
 
     This class prepares and computes moment-based statistics required for tuning
-    the regularization parameters (\lambda) in Ridge regression. By leveraging
+    the regularization parameters (:math:`\lambda`) in Ridge regression. By leveraging
     moments of the coefficients and the design matrix, it facilitates principled
-    selection of \lambda values that balance bias and variance.
+    selection of :math:`\lambda` values that balance bias and variance.
 
     Attributes
     ----------
@@ -895,9 +873,9 @@ class MomentTunerSetup:
     beta_norms_squared : np.ndarray
         Squared norms of coefficients for each group.
     N_norms_squared : np.ndarray
-        Squared norms of the N matrix for each group.
+        Squared norms of the :math:`N` matrix for each group.
     M_squared : np.ndarray
-        M squared matrix computed as (p_s * p_s^T) / n^2.
+        :math:`M^2` matrix computed as (:math:`p_s \times p_s^T) / n^2`.
     """
 
     def __init__(self, rdg: BasicGroupRidgeWorkspace):
@@ -936,27 +914,27 @@ class MomentTunerSetup:
 def sigma_squared_path(
     rdg: BasicGroupRidgeWorkspace, mom: MomentTunerSetup, sigma_s_squared: np.ndarray
 ):
-    """Compute the regularization path for different values of \sigma^2.
+    r"""Compute the regularization path for different values of :math:`\sigma^2`.
 
     This function evaluates how the Ridge regression coefficients and leave-one-out
-    (LOO) errors change as \sigma^2 varies. By analyzing the regularization path,
+    (LOO) errors change as :math:`\sigma^2` varies. By analyzing the regularization path,
     one can understand the impact of different levels of regularization on the
     model's performance.
 
-    For each \sigma^2 in the provided array:
+    For each :math:`\sigma^2` in the provided array:
 
-    1. Compute \lambda:
-        \lambda = get_lambdas(mom, \sigma^2)
+    1. Compute :math:`\lambda`:
+        :math:`\lambda = \text{get_lambdas}(mom, \sigma^2)`
 
     2. Fit Ridge Model:
-        Fit the Ridge regression model using the computed \lambda and evaluate:
-            LOO Error = rdg.fit(\lambda)
+        Fit the Ridge regression model using the computed :math:`\lambda` and evaluate:
+            LOO Error = rdg.fit(:math:`\lambda`)
 
     3. Store Coefficients:
-        \beta = rdg.beta_current
+        :math:`\beta = rdg.beta_current`
 
     4. Aggregate Results:
-        Collect the \lambda values, LOO errors, and \beta coefficients for each \sigma^2.
+        Collect the :math:`\lambda` values, LOO errors, and :math:`\beta` coefficients for each :math:`\sigma^2`.
 
     Parameters
     ----------
@@ -965,18 +943,18 @@ def sigma_squared_path(
     mom : MomentTunerSetup
         The moment tuner setup containing necessary statistics.
     sigma_s_squared : np.ndarray
-        An array of \sigma^2 values to evaluate.
+        An array of :math:`\sigma^2` values to evaluate.
 
     Returns
     -------
     dict
         A dictionary containing the regularization path information:
             - 'lambdas' : np.ndarray
-                Array of \lambda values for each \sigma^2.
+                Array of :math:`\lambda` values for each :math:`\sigma^2`.
             - 'loos' : np.ndarray
-                Array of LOO errors corresponding to each \sigma^2.
+                Array of LOO errors corresponding to each :math:`\sigma^2`.
             - 'betas' : np.ndarray
-                Array of coefficient vectors corresponding to each \sigma^2.
+                Array of coefficient vectors corresponding to each :math:`\sigma^2`.
 
     Raises
     ------
@@ -999,41 +977,41 @@ def sigma_squared_path(
             loos_hat[i] = rdg.fit(lambdas_tmp)
             betas[i, :] = rdg.beta_current
         except RidgeRegressionError as e:
-            print(f"Error at \sigma^2 = {sigma_sq}: {str(e)}")
+            print(f"Error at :math:`\sigma^2 = {sigma_sq}`: {str(e)}")
 
     return {"lambdas": lambdas, "loos": loos_hat, "betas": betas}
 
 
 def get_lambdas(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
-    """Compute lambda values for a given \sigma^2.
+    r"""Compute :math:`\lambda` values for a given :math:`\sigma^2`.
 
-    This function calculates the regularization parameters (\lambda) for each
-    feature group based on moment-based statistics. The computed \lambda balances
+    This function calculates the regularization parameters (:math:`\lambda`) for each
+    feature group based on moment-based statistics. The computed :math:`\lambda` balances
     the regularization strength across different groups, ensuring that groups with
     more features or higher variance receive appropriate penalization.
 
     The steps are as follows:
 
-    1. Compute \alpha^2 for each group:
-        \alpha_g^2 = \max(\|\beta_g\|^2 - \sigma^2 \|N_g\|^2, 0) / p_g
+    1. Compute :math:`\alpha^2` for each group:
+        :math:`\alpha_g^2 = \max(\|\beta_g\|^2 - \sigma^2 \|N_g\|^2, 0) / p_g`
 
-    2. Compute \gamma_s for each group:
-        \gamma_g = p_g / n
+    2. Compute :math:`\gamma_s` for each group:
+        :math:`\gamma_g = p_g / n`
 
-    3. Compute \lambda for each group:
-        \lambda_g = (\sigma^2 \gamma_g) / \alpha_g^2
+    3. Compute :math:`\lambda` for each group:
+        :math:`\lambda_g = (\sigma^2 \gamma_g) / \alpha_g^2`
 
     Parameters
     ----------
     mom : MomentTunerSetup
         The moment tuner setup containing necessary statistics.
     sigma_sq : float
-        The \sigma^2 value for which to compute \lambda.
+        The :math:`\sigma^2` value for which to compute :math:`\lambda`.
 
     Returns
     -------
     np.ndarray
-        The computed \lambda values for each feature group.
+        The computed :math:`\lambda` values for each feature group.
 
     Raises
     ------
@@ -1063,59 +1041,61 @@ def get_lambdas(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
     return lambdas
 
 
-def get_alpha_s_squared(self, sigma_sq: float) -> np.ndarray:
-    """Compute \alpha_s^2 values for a given \sigma^2 using Non-Negative Least Squares
+def get_alpha_s_squared(mom: MomentTunerSetup, sigma_sq: float) -> np.ndarray:
+    r"""Compute :math:`\alpha_s^2` values for a given :math:`\sigma^2` using Non-Negative Least Squares
     (NNLS).
 
-    This function calculates the \alpha_s^2 values required for determining the
-    regularization parameters (\lambda) in Ridge regression. The \alpha_s^2 values
+    This function calculates the :math:`\alpha_s^2` values required for determining the
+    regularization parameters (:math:`\lambda`) in Ridge regression. The :math:`\alpha_s^2` values
     encapsulate the balance between the coefficient norms and the influence of
-    the design matrix, adjusted by \sigma^2.
+    the design matrix, adjusted by :math:`\sigma^2`.
 
     The steps are as follows:
 
     1. Compute the right-hand side (RHS):
-        RHS_g = \|\beta_g\|^2 - \sigma^2 \|N_g\|^2
+        :math:`\text{RHS}_g = \|\beta_g\|^2 - \sigma^2 \|N_g\|^2`
 
     2. Solve the NNLS problem:
-        \min \| M_squared * alpha_sq_by_p - RHS \|_2^2
-        subject to alpha_sq_by_p \geq 0
+        :math:`\min \| M_{\text{squared}} \times \alpha_{\text{sq\_by\_p}} - \text{RHS} \|_2^2`
+        subject to :math:`\alpha_{\text{sq\_by\_p}} \geq 0`
 
-    3. Compute \alpha_g^2:
-        \alpha_g^2 = alpha_sq_by_p * p_g
+    3. Compute :math:`\alpha_g^2`:
+        :math:`\alpha_g^2 = \alpha_{\text{sq\_by\_p}} \times p_g`
 
     Parameters
     ----------
+    mom : MomentTunerSetup
+        The moment tuner setup containing necessary statistics.
     sigma_sq : float
-        The \sigma^2 value for which to compute \alpha_s^2.
+        The :math:`\sigma^2` value for which to compute :math:`\alpha_s^2`.
 
     Returns
     -------
     np.ndarray
-        The computed \alpha_s^2 values for each feature group.
+        The computed :math:`\alpha_s^2` values for each feature group.
 
     Raises
     ------
     ValueError
-        If sigma_sq is negative or if any p_s is zero.
+        If sigma_sq is negative or if any :math:`p_s` is zero.
     NNLSError
         If the NNLS algorithm fails to converge.
     """
     if sigma_sq < 0:
         raise ValueError("sigma_sq must be non-negative.")
-    if np.any(self.groups.ps == 0):
+    if np.any(mom.ps == 0):
         raise ValueError("All p_s values must be non-zero.")
 
     # Compute the right-hand side
-    rhs = self.beta_norms_squared - sigma_sq * self.N_norms_squared
+    rhs = mom.beta_norms_squared - sigma_sq * mom.N_norms_squared
     rhs = np.maximum(rhs, 0)
 
     # Solve the NNLS problem: M_squared * alpha_sq_by_p ≈ rhs
     try:
-        alpha_sq_by_p = nonneg_lsq(self.M_squared, rhs, alg="fnnls")
+        alpha_sq_by_p = nonneg_lsq(mom.M_squared, rhs, alg="fnnls")
     except NNLSError as e:
         raise NNLSError(f"Failed to compute alpha_s_squared: {str(e)}")
 
-    alpha_s_squared = alpha_sq_by_p * self.groups.ps
+    alpha_s_squared = alpha_sq_by_p * mom.groups.ps
 
     return alpha_s_squared
