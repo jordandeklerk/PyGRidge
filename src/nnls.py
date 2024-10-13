@@ -100,7 +100,8 @@ def nonneg_lsq(
 
     if gram and A.shape[0] != B.shape[0]:
         raise InvalidInputError(
-            f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has {B.shape[0]} rows."
+            f"Incompatible shapes for gram matrices: A has {A.shape[0]} rows, B has"
+            f" {B.shape[0]} rows."
         )
 
     if alg == "fnnls":

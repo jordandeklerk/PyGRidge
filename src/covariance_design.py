@@ -823,7 +823,9 @@ def simulate_rotated_design(
     if Sigma.shape[0] != Sigma.shape[1]:
         raise ValueError("Covariance matrix :math:`\Sigma` must be square.")
     if np.any(np.isnan(Sigma)) or np.any(np.isinf(Sigma)):
-        raise ValueError("Covariance matrix :math:`\Sigma` contains NaN or infinite values.")
+        raise ValueError(
+            "Covariance matrix :math:`\Sigma` contains NaN or infinite values."
+        )
 
     try:
         Sigma_chol = np.linalg.cholesky(Sigma)

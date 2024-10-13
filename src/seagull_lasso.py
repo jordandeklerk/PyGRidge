@@ -172,7 +172,9 @@ def seagull_lasso(
                     ) * np.sum(beta_diff**2):
                         # Adjust convergence criteria based on lambda value
                         conv_threshold = max(epsilon_convergence, lambda_val * 1e-4)
-                        if np.max(np.abs(beta_diff)) <= conv_threshold * np.linalg.norm(beta):
+                        if np.max(np.abs(beta_diff)) <= conv_threshold * np.linalg.norm(
+                            beta
+                        ):
                             accuracy_reached = True
                         beta = beta_new
                         criterion_fulfilled = True
