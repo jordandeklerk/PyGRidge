@@ -272,7 +272,7 @@ def test_block_diagonal_empty_blocks():
     """Test ValueError for empty blocks in BlockDiagonal."""
     block_diag_obj = BlockDiagonal(blocks=[])
     with pytest.raises(
-        ValueError, match=r"Resulting covariance matrix \\Sigma is empty."
+        ValueError, match=r"Resulting covariance matrix :math:`\\Sigma` is empty\."
     ):
         Sigma = block_diag_obj.get_Sigma()
 

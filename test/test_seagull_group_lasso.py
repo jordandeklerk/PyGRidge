@@ -8,7 +8,7 @@ def sample_data():
     np.random.seed(42)
     n, p = 100, 20
     y = np.random.randn(n)
-    X = np.random.randn(n, p)
+    X = np.random.randn(n, p)  # No need to transpose, this is correct
     feature_weights = np.ones(p)
     groups = np.repeat(np.arange(1, 6), 4)
     beta = np.zeros(p)

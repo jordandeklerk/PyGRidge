@@ -149,7 +149,8 @@ def seagull_lasso(
         else:
             while (not accuracy_reached) and (counter < max_iterations):
                 # Calculate gradient
-                gradient = (X.T @ beta - X_transp_y) / n
+                beta_col = beta.reshape(-1, 1)
+                gradient = (X.T @ (X @ beta_col).flatten() - X_transp_y) / n
 
                 criterion_fulfilled = False
                 time_step = 1.0
